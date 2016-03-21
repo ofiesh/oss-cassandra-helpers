@@ -1,0 +1,13 @@
+rings:
+  ringA:
+    hosts: [db]
+    preferredKeyspace: test_ringa
+    solrUri: http://db:8983/solr
+  ringB:
+    hosts: [db]
+    preferredKeyspace: test_ringb
+    solrUri: http://db:8983/solr
+defaultRing: ringA
+groups:
+  groupA: ringA
+  groupB: ringB
