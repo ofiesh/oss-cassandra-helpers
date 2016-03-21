@@ -13,10 +13,13 @@
     <project.name>${project.groupId}.${project.artifactId}</project.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <version.apache-commons-lang3>3.4</version.apache-commons-lang3>
+    <version.apache-httpclient>4.5.2</version.apache-httpclient>
     <version.cassandra-driver-core>2.1.9</version.cassandra-driver-core>
     <version.cc-oss-commands>0.0.1-SNAPSHOT</version.cc-oss-commands>
     <version.cc-oss-http-client>0.0.1-SNAPSHOT</version.cc-oss-http-client>
     <version.cc-oss-java-helpers>0.0.1-SNAPSHOT</version.cc-oss-java-helpers>
+    <version.javax-ws-rs-api>2.0.1</version.javax-ws-rs-api>
   </properties>
 
   <dependencies>
@@ -38,6 +41,25 @@
       <version>${version.cc-oss-java-helpers}</version>
     </dependency>
 
+    <dependency>	
+	  <groupId>org.apache.httpcomponents</groupId>
+	  <artifactId>httpclient</artifactId>
+	  <version>${version.apache-httpclient}</version>
+    </dependency>
+    
+    <dependency>
+	  <groupId>org.apache.commons</groupId>
+	  <artifactId>commons-lang3</artifactId>
+	  <version>${version.apache-commons-lang3}</version>
+	</dependency>
+    
+    
+    <dependency>
+	  <groupId>javax.ws.rs</groupId>
+	  <artifactId>javax.ws.rs-api</artifactId>
+	  <version>${version.javax-ws-rs-api}</version>
+    </dependency>
+
     <dependency>
       <groupId>com.datastax.cassandra</groupId>
       <artifactId>cassandra-driver-core</artifactId>
@@ -54,6 +76,13 @@
       <groupId>com.thenewentity</groupId>
       <artifactId>dropwizard-multi-config</artifactId>
       <version>0.5.0-SNAPSHOT</version>
+
+      <exclusions>
+      	<exclusion>
+      		<artifactId>dropwizard-core</artifactId>
+      		<groupId>io.dropwizard</groupId>
+      	</exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -66,6 +95,20 @@
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -86,18 +129,6 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 </project>

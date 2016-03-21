@@ -23,9 +23,9 @@ import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
-import jersey.repackaged.com.google.common.base.Objects;
 
 public class TableComparator extends TableProcessor<TableComparator> {
 

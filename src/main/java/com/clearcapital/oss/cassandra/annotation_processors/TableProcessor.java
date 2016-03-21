@@ -8,8 +8,8 @@ import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
+import com.google.common.base.Objects;
 
-import jersey.repackaged.com.google.common.base.Objects;
 
 public class TableProcessor<T> {
 
