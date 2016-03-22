@@ -104,11 +104,6 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             SolrOptionsProcessor.coreCreator(executor, manager, tableClass).setMultiRingGroup(multiRingGroup)
                     .setTableName(tableName).create();
         }
-        // if (SolrTableProcessor.getSolrAnnotation(tableClass) != null) {
-        // SolrTableProcessor.uploadConfig(schema, tableClass);
-        // SolrTableProcessor.uploadSchema(schema, tableClass);
-        // SolrTableProcessor.createCore(schema, tableClass);
-        // }
     }
 
     public TemporaryTable buildTemp() throws AssertException, CassandraException, CommandExecutionException,

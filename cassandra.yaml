@@ -1,12 +1,12 @@
 rings:
   ringA:
-    hosts: [db]
+    hosts: [cassandra]
     preferredKeyspace: test_ringa
-    solrUri: http://db:8983/solr
+    solrUri: http://cassandra:8983/solr
   ringB:
-    hosts: [db]
+    hosts: [dse]
     preferredKeyspace: test_ringb
-    solrUri: http://db:8983/solr
+    solrUri: http://dse:8983/solr
 defaultRing: ringA
 groups:
   groupA: ringA

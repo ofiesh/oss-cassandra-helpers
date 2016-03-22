@@ -70,7 +70,7 @@ public class RingClient {
             throws AssertException, CassandraException, InterruptedException {
         while (true) {
             synchronized (CassandraTestResource.class) {
-                String keyspaceName = getSession().getLoggedKeyspace();
+                String keyspaceName = CQLHelpers.getUniqueName("tmp_");
                 if (!keyspaceExists(keyspaceName)) {
                     CassandraTestResource.log.debug("Creating unique keyspace session:" + keyspaceName);
                     getSession().createKeyspace(keyspaceName);

@@ -19,8 +19,9 @@
     <version.cc-oss-commands>0.0.1-SNAPSHOT</version.cc-oss-commands>
     <version.cc-oss-http-client>0.0.1-SNAPSHOT</version.cc-oss-http-client>
     <version.cc-oss-java-helpers>0.0.1-SNAPSHOT</version.cc-oss-java-helpers>
-    <version.dse-driver>2.1.9</version.dse-driver>
+    <version.dse-driver>3.0.0</version.dse-driver>
     <version.javax-ws-rs-api>2.0.1</version.javax-ws-rs-api>
+    <version.jersey-common>2.22.2</version.jersey-common>
   </properties>
 
   <dependencies>
@@ -59,6 +60,12 @@
 	  <groupId>javax.ws.rs</groupId>
 	  <artifactId>javax.ws.rs-api</artifactId>
 	  <version>${version.javax-ws-rs-api}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-common</artifactId>
+      <version>${version.jersey-common}</version>
     </dependency>
 
     <dependency>

@@ -14,7 +14,7 @@ import com.clearcapital.oss.cassandra.annotations.SolrOptions;
  * @author eehlinger
  */
 @CassandraTable( // @formatter:off
-        multiRingGroup = "groupA",
+        multiRingGroup = "groupB",
         tableName = "testCreateTable",
         columns = {
             @Column(cassandraName = DemoSolrTable.ID_COLUMN, reflectionColumnInfo = @ReflectionColumnInfo(
