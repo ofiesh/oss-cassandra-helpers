@@ -13,10 +13,16 @@ public class AutoSchemaConfiguration {
     private Boolean dryRun;
     private ImmutableSet<String> dropColumns;
     private ImmutableSet<String> dropTables;
+	public Boolean killFirst;
 
     @JsonProperty
     public Boolean getDryRun() {
         return dryRun;
+    }
+
+    @JsonProperty
+    public Boolean getKillFirst() {
+        return killFirst;
     }
 
     @JsonProperty
@@ -55,6 +61,11 @@ public class AutoSchemaConfiguration {
             result.dropTables = value;
             return this;
         }
+
+		public Builder setKillFirst(Boolean value) {
+			result.killFirst = value;
+			return this;
+		}
     }
 
     public static Builder builder() {

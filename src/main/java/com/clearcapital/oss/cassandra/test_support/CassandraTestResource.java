@@ -12,7 +12,6 @@ import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.clearcapital.oss.json.JsonSerializer;
-import com.eaio.uuid.UUID;
 import com.thenewentity.utils.dropwizard.MultipleConfigurationMerger;
 
 /**
@@ -53,11 +52,6 @@ public class CassandraTestResource extends ExternalResource {
 	public MultiRingClientManager getClient() {
 		return multiRingClientManager;
 	}
-
-	public String getUniqueName(String prefix) {
-        String result = prefix + (new UUID()).toString().replace("-", "_");
-        return result;
-    }
 
 	@Override
 	protected void before() throws Throwable {

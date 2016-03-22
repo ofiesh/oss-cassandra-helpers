@@ -63,20 +63,27 @@ public class RingClient {
 		return null != getKeyspaceInfo(keyspaceName);
 	}
 
-    public CassandraTemporaryKeyspace createTemporaryKeyspace(String keyspacePrefix)
+	/**
+	 * 
+	 */
+    public TemporaryKeyspace createTemporaryKeyspace(String keyspacePrefix)
             throws AssertException, CassandraException, InterruptedException {
         while (true) {
             synchronized (CassandraTestResource.class) {
-                long suffix = System.currentTimeMillis();
-                String keyspaceName = keyspacePrefix + suffix;
+                String keyspaceName = getSession().getLoggedKeyspace();
                 if (!keyspaceExists(keyspaceName)) {
                     CassandraTestResource.log.debug("Creating unique keyspace session:" + keyspaceName);
                     getSession().createKeyspace(keyspaceName);
-                    return new CassandraTemporaryKeyspace(getKeyspace(keyspaceName));
+                    return new TemporaryKeyspace(getKeyspace(keyspaceName));
                 }
             }
             Thread.sleep(1);
         }
     }
+
+	public void dropKeyspace() {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

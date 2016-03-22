@@ -13,12 +13,13 @@
     <project.name>${project.groupId}.${project.artifactId}</project.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <version.apache-cassandra>2.1.9</version.apache-cassandra>
     <version.apache-commons-lang3>3.4</version.apache-commons-lang3>
     <version.apache-httpclient>4.5.2</version.apache-httpclient>
-    <version.cassandra-driver-core>2.1.9</version.cassandra-driver-core>
     <version.cc-oss-commands>0.0.1-SNAPSHOT</version.cc-oss-commands>
     <version.cc-oss-http-client>0.0.1-SNAPSHOT</version.cc-oss-http-client>
     <version.cc-oss-java-helpers>0.0.1-SNAPSHOT</version.cc-oss-java-helpers>
+    <version.dse-driver>2.1.9</version.dse-driver>
     <version.javax-ws-rs-api>2.0.1</version.javax-ws-rs-api>
   </properties>
 
@@ -69,8 +70,15 @@
           <artifactId>slf4j-api</artifactId>
         </exclusion>
       </exclusions>
-      <version>${version.cassandra-driver-core}</version>
+      <version>${version.dse-driver}</version>
     </dependency>
+    
+	<dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>cassandra-all</artifactId>
+      <version>${version.apache-cassandra}</version>
+    </dependency>
+    
 
     <dependency>
       <groupId>com.thenewentity</groupId>

@@ -8,6 +8,7 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.StatementWrapper;
 import com.datastax.driver.core.StatementWrapperHack;
+import com.eaio.uuid.UUID;
 
 /**
  * Provides a set of methods to help in dealing with CQL.
@@ -81,4 +82,9 @@ public class CQLHelpers {
         return s.replaceAll("\'", "\'\'");
     }
 
+	public static String getUniqueName(String prefix) {
+        String result = prefix + (new UUID()).toString().replace("-", "_");
+        return result;
+    }
+    
 }

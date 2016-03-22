@@ -35,7 +35,7 @@ public class CQLHelpersTest {
 
     @Test
     public void testGetQueryPreparedStatements() throws Exception {
-        try (CassandraTemporaryKeyspace keyspace = cassandraResource.multiRingClientManager
+        try (TemporaryKeyspace keyspace = cassandraResource.multiRingClientManager
                 .createTemporaryKeyspace("test", "testGetQueryPreparedStatements")) {
             SessionHelper session = keyspace.getSession();
             try {

@@ -11,4 +11,8 @@ public class CassandraException extends Exception {
     public CassandraException(String message, Throwable cause) {
         super(message, cause);
     }
+
+	public CassandraException(String message) {
+		super(message);
+	}
 }

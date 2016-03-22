@@ -10,8 +10,9 @@ import java.util.Arrays;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.cassandra.TempTable;
+import com.clearcapital.oss.cassandra.TemporaryTable;
 import com.clearcapital.oss.cassandra.test_support.CassandraTestResource;
 import com.clearcapital.oss.executors.ImmediateCommandExecutor;
 import com.datastax.driver.core.DataType;
@@ -29,9 +30,9 @@ public class TableComparatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
+        String tableName = CQLHelpers.getUniqueName("tmp_");
 
-        try (TempTable tempTable = CassandraTableProcessor
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)
                 .buildTemp()) {
 
@@ -58,9 +59,9 @@ public class TableComparatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
+        String tableName = CQLHelpers.getUniqueName("tmp_");
 
-        try (TempTable tempTable = CassandraTableProcessor
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)
                 .buildTemp()) {
 
@@ -87,9 +88,9 @@ public class TableComparatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
+        String tableName = CQLHelpers.getUniqueName("tmp_");
 
-        try (TempTable tempTable = CassandraTableProcessor
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)
                 .buildTemp()) {
 
@@ -127,9 +128,9 @@ public class TableComparatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
+        String tableName = CQLHelpers.getUniqueName("tmp_");
 
-        try (TempTable tempTable = CassandraTableProcessor
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)
                 .buildTemp()) {
 

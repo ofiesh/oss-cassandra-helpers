@@ -161,4 +161,12 @@ public class SessionHelper {
         URI uri = uriBuilder.build(getLoggedKeyspace(), tableName);
         return uri;
     }
+
+	public void dropKeyspace() {
+		dropKeyspace(session.getLoggedKeyspace());
+	}
+
+	public void dropKeyspace(String keyspaceName) {
+        session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName ));
+	}
 }

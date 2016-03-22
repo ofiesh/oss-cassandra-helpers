@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
 
 import com.clearcapital.oss.cassandra.ColumnDefinition;
-import com.clearcapital.oss.cassandra.TempTable;
+import com.clearcapital.oss.cassandra.TemporaryTable;
 import com.clearcapital.oss.cassandra.annotations.AdditionalIndex;
 import com.clearcapital.oss.cassandra.annotations.ClusteringOrder;
 import com.clearcapital.oss.cassandra.annotations.SolrOptions;
@@ -111,10 +111,10 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         // }
     }
 
-    public TempTable buildTemp() throws AssertException, CassandraException, CommandExecutionException,
+    public TemporaryTable buildTemp() throws AssertException, CassandraException, CommandExecutionException,
             ClientProtocolException, IOException {
         build();
-        return new TempTable(getSession(), tableName);
+        return new TemporaryTable(getSession(), tableName);
     }
 
     private static void addColumnDefinitions(Create create, final Collection<ColumnDefinition> columnDefinitions) {

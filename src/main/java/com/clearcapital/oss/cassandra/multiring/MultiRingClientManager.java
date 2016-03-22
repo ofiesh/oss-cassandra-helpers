@@ -2,7 +2,7 @@ package com.clearcapital.oss.cassandra.multiring;
 
 import java.util.Map.Entry;
 
-import com.clearcapital.oss.cassandra.CassandraTemporaryKeyspace;
+import com.clearcapital.oss.cassandra.TemporaryKeyspace;
 import com.clearcapital.oss.cassandra.RingClient;
 import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
 import com.clearcapital.oss.cassandra.configuration.RingConfiguration;
@@ -47,7 +47,10 @@ public class MultiRingClientManager {
 		return getRingClientForRing(ringKey);
 	}
 
-	public CassandraTemporaryKeyspace createTemporaryKeyspace(String group, String keyspacePrefix)
+	/**
+	 * Create a Temporary Keyspace in the given group, with the given prefix 
+	 */
+	public TemporaryKeyspace createTemporaryKeyspace(String group, String keyspacePrefix)
     		throws CassandraException, InterruptedException, AssertException {
         RingClient client = getRingClientForGroup(group);
         return client.createTemporaryKeyspace(keyspacePrefix);

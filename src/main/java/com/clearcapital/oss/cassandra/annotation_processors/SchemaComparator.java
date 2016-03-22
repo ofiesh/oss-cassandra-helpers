@@ -38,8 +38,16 @@ public class SchemaComparator extends SchemaProcessor {
 
     public void compare() throws ClientProtocolException, AssertException, CassandraException,
             CommandExecutionException, IOException {
+    	if (autoSchemaConfig.getKillFirst() && !autoSchemaConfig.getDryRun()) {
+    		log.debug("Killing preexisting schemas");
+    		
+            ImmutableMap<String, RingClient> ringClients = manager.getRingClients();
+            for (Entry<String, RingClient> ringClient : ringClients.entrySet()) {
+            	String keyspaceName = ringClient.getValue().getPreferredKeyspaceName();
+            	ringClient.getValue().getSession().dropKeyspace(keyspaceName);
+            }    		
+    	}
         ImmutableSet<String> tablesProcessed = compareAnnotatedClasses();
-
         dropSuperfluousTables(tablesProcessed);
     }
 

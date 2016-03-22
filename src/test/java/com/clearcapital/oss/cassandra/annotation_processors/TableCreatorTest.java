@@ -10,8 +10,9 @@ import java.util.Arrays;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.cassandra.TempTable;
+import com.clearcapital.oss.cassandra.TemporaryTable;
 import com.clearcapital.oss.cassandra.test_support.CassandraTestResource;
 import com.clearcapital.oss.executors.ImmediateCommandExecutor;
 import com.datastax.driver.core.TableMetadata;
@@ -32,8 +33,8 @@ public class TableCreatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
-        try (TempTable tempTable = CassandraTableProcessor
+        String tableName = CQLHelpers.getUniqueName("tmp_");
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)
                 .buildTemp()) {
 
@@ -58,8 +59,8 @@ public class TableCreatorTest {
         ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
 
         SessionHelper session = null;
-        String tableName = cassandraResource.getUniqueName("tmp_");
-        try (TempTable tempTable = CassandraTableProcessor
+        String tableName = CQLHelpers.getUniqueName("tmp_");
+        try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoSolrTable.class).setTableName(tableName)
                 .buildTemp()) {
 

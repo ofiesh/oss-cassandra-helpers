@@ -1,11 +1,11 @@
 package com.clearcapital.oss.cassandra;
 
-public class TempTable implements AutoCloseable {
+public class TemporaryTable implements AutoCloseable {
 
     private SessionHelper session;
     private String tableName;
 
-    public TempTable(SessionHelper session, String tableName) {
+    public TemporaryTable(SessionHelper session, String tableName) {
         this.session = session;
         this.tableName = tableName;
     }
