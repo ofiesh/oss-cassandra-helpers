@@ -7,7 +7,7 @@ A set of utility code on top of the Apache and Datastax drivers for
 working with Cassandra databases. There are a few interesting
 facilities provided here:
 
-- [*Multiring management*](multiring-management): Easily connect to
+- [*Multiring management*](multiring-management.md): Easily connect to
 multiple Cassandra rings and migrate data from one ring to another.
 
 - [*AutoSchema*](autoschema): Compares the schema in a Cassandra Ring
