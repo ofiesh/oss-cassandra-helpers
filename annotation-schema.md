@@ -1,7 +1,7 @@
 ![Logo](https://www.clearcapital.com/wp-content/uploads/2015/02/Clear-Capital@2x.png)
 --
 
-[Home](README)
+[Home](README.md)
 
 # Annotation-Based Schema Definition
 
@@ -36,7 +36,7 @@ This tells ```CassandraTableProcessor``` that ```DemoTable```
 provides a programmatic interface to a table in Cassandra, but doesn't (yet)
 tell ```CassandraTableProcessor``` what its schema looks like. Let's start by setting the name of the
 table from Cassandra's perspective, and how to find it with respect to
-[MultiRing Management](multiring-management).
+[MultiRing Management](multiring-management.md).
 
 ```java
 @CassandraTable(
