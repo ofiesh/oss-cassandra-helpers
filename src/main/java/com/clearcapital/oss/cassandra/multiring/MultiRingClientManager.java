@@ -42,11 +42,20 @@ public class MultiRingClientManager {
 		return connections.get(key);
 	}
 
+	/**
+	 * Find the ring for the specified groupKey. Note that if the specified groupKey is not configured,
+	 * this will grab the configured default ring.
+	 */
 	public RingClient getRingClientForGroup(String groupKey) throws AssertException {
-        String ringKey = mapper.getConnectionKeyForGroup(groupKey);
+		String ringKey = mapper.getConnectionKeyForGroup(groupKey);
 		return getRingClientForRing(ringKey);
 	}
 
+	public RingClient getDefaultRingClient() throws AssertException {
+		return getRingClientForRing(mapper.getConfiguration().getDefaultRing());
+	}
+	
+	
 	/**
 	 * Create a Temporary Keyspace in the given group, with the given prefix 
 	 */
@@ -55,6 +64,12 @@ public class MultiRingClientManager {
         RingClient client = getRingClientForGroup(group);
         return client.createTemporaryKeyspace(keyspacePrefix);
     }
+	
+	public void disconnectAll() {
+		for( RingClient ringClient : getRingClients().values()) {
+			ringClient.disconnect();
+		}
+	}
 
     private static ImmutableMap<String, RingClient> buildConnections(
             MultiRingClientMapper mapper) throws AssertException {
@@ -70,5 +85,6 @@ public class MultiRingClientManager {
 		ImmutableMap<String, RingClient> result = connectionsBuilder.build();
 		return result;
 	}
+    
 
 }

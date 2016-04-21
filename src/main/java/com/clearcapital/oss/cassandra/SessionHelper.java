@@ -42,11 +42,20 @@ public class SessionHelper {
         this.ringConfiguration = ringConfiguration;
     }
 
+    /**
+     * Executes the statement.
+     * 
+     * @throws CassandraException
+     *             A translation of NoHostAvailableException, QueryExecutionException, or InvalidQueryException; all of
+     *             these are unchecked exceptions, which seems somewhat wrong to us, since an application really needs
+     *             to know that they should be handled.
+     */
     public ResultSet execute(Statement statement, int maxRetries, boolean expandBatchOnFailure)
             throws CassandraException {
         int retries = 0;
 
-        // This isn't actually an infinite loop: either session.execute() will work, or ++retries will exceed
+        // This isn't actually an infinite loop: either session.execute() will
+        // work, or ++retries will exceed
         // maxRetries, or we'll see an InvalidQueryException
         while (true) {
             try {
@@ -61,7 +70,8 @@ public class SessionHelper {
                 String queryString = CQLHelpers.getQueryText(statement);
                 log.debug("InvalidQueryException caught. Here is the queryString:" + queryString, iqe);
                 if (expandBatchOnFailure) {
-                    // This bit is helpful for figuring out *which* query is causing a problem:
+                    // This bit is helpful for figuring out *which* query is
+                    // causing a problem:
                     if (statement instanceof BatchStatement) {
                         log.trace("Trying batch one statement at a time");
                         BatchStatement batch = (BatchStatement) statement;
@@ -69,8 +79,8 @@ public class SessionHelper {
                         for (Statement child : children) {
                             log.trace("Attempting:" + CQLHelpers.getQueryText(child));
 
-                            execute(child, maxRetries, false); // we intentionally allow CassandraExceptions to
-                                                                        // propagate from this call.
+                            // we intentionally allow CassandraExceptions to propagate from this call:
+                            execute(child, maxRetries, false);
                         }
                     }
                 }
@@ -118,7 +128,10 @@ public class SessionHelper {
         return statement;
     }
 
-    public void dropTable(String tableName) throws CassandraException {
+    /**
+     * Drop the specified table, if it exists.
+     */
+    public void dropTableIfExists(String tableName) throws CassandraException {
         execute(SchemaBuilder.dropTable(tableName).ifExists());
     }
 
@@ -162,11 +175,11 @@ public class SessionHelper {
         return uri;
     }
 
-	public void dropKeyspace() {
-		dropKeyspace(session.getLoggedKeyspace());
-	}
+    public void dropKeyspace() {
+        dropKeyspace(session.getLoggedKeyspace());
+    }
 
-	public void dropKeyspace(String keyspaceName) {
-        session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName ));
-	}
+    public void dropKeyspace(String keyspaceName) {
+        session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName));
+    }
 }

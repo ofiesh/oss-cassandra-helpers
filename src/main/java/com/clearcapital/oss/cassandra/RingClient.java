@@ -7,6 +7,7 @@ import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.ProtocolVersion;
 
 public class RingClient {
 
@@ -82,8 +83,20 @@ public class RingClient {
     }
 
 	public void dropKeyspace() {
-		// TODO Auto-generated method stub
+		// TODO Actually drop the keyspace
 		
+	}
+
+	public void disconnect() {
+		cluster.close();
+	}
+
+	public Cluster getCluster() {
+		return cluster;
+	}
+
+	public ProtocolVersion getProtocolVersion() {
+		return getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
 	}
 
 }

@@ -1,5 +1,6 @@
 package com.clearcapital.oss.cassandra.annotation_processors;
 
+import com.clearcapital.oss.cassandra.CassandraTableImpl;
 import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotations.CassandraDataType;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
@@ -7,6 +8,7 @@ import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.cassandra.annotations.JsonColumnInfo;
 import com.clearcapital.oss.cassandra.annotations.ReflectionColumnInfo;
 import com.clearcapital.oss.cassandra.annotations.SolrOptions;
+import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 
 /**
  * This is just a simple table definition suitable for using in our tests.
@@ -15,6 +17,7 @@ import com.clearcapital.oss.cassandra.annotations.SolrOptions;
  */
 @CassandraTable( // @formatter:off
         multiRingGroup = "groupB",
+        modelClass = DemoModel.class,
         tableName = "testCreateTable",
         columns = {
             @Column(cassandraName = DemoSolrTable.ID_COLUMN, reflectionColumnInfo = @ReflectionColumnInfo(
@@ -30,7 +33,7 @@ import com.clearcapital.oss.cassandra.annotations.SolrOptions;
            solrconfigResourceName = "test/tables/DemoSolrTable/solrconfig.xml"
         )
     ) // @formatter:on
-public class DemoSolrTable {
+public class DemoSolrTable extends CassandraTableImpl<DemoSolrTable,DemoModel> {
 
     public static final String ID_COLUMN = "id";
     public static final String UPDATE_ID_COLUMN = "updateId";
@@ -39,4 +42,8 @@ public class DemoSolrTable {
     public static final String EXTRA_COLUMN = "extraColumn";
     public static final String SOLR_QUERY_COLUMN = "solr_query";
 
+    DemoSolrTable(MultiRingClientManager multiRingClientManager) {
+    	super(multiRingClientManager);
+    }
+    
 }

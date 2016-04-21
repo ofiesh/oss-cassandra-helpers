@@ -20,7 +20,7 @@ public class TemporaryTable implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        session.dropTable(tableName);
+        session.dropTableIfExists(tableName);
     }
 
 }

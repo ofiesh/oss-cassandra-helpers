@@ -5,7 +5,7 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clearcapital.oss.cassandra.exceptions.CassandraException;
+import com.clearcapital.oss.cassandra.exceptions.CassandraDeserializationException;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
@@ -16,7 +16,7 @@ public class CassandraResultSetIterator<E> implements Iterator<E> {
     private final CassandraRowDeserializer<E> deserializer;
     private Row row;
 
-    CassandraResultSetIterator(ResultSet resultSet, CassandraRowDeserializer<E> deserializer) {
+    public CassandraResultSetIterator(ResultSet resultSet, CassandraRowDeserializer<E> deserializer) {
         this.iterator = resultSet.iterator();
         this.deserializer = deserializer;
     }
@@ -31,7 +31,7 @@ public class CassandraResultSetIterator<E> implements Iterator<E> {
         row = iterator.next();
         try {
             return deserializer.deserializeRow(row);
-        } catch (CassandraException e) {
+        } catch (CassandraDeserializationException e) {
             log.warn("Could not deserializeRow",e);
             return null;
         }

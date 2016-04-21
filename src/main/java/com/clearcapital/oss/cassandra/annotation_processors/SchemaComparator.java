@@ -75,7 +75,7 @@ public class SchemaComparator extends SchemaProcessor {
                     if (dropTables.contains(fullTableName)) {
                         log.debug("Dropping superfluous table:" + tableName);
                         if (!autoSchemaConfig.getDryRun()) {
-                            session.dropTable(tableName);
+                            session.dropTableIfExists(tableName);
                         }
                     } else {
                         log.debug("Found superfluous table.  To drop it, run auto-schema --drop-tables '"

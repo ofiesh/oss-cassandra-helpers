@@ -1,5 +1,10 @@
 package com.clearcapital.oss.cassandra;
 
+import java.util.Map;
+
+import com.clearcapital.oss.cassandra.annotations.Column;
+import com.clearcapital.oss.java.exceptions.ReflectionPathException;
+import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.datastax.driver.core.DataType;
 
 public interface ColumnDefinition {
@@ -11,6 +16,11 @@ public interface ColumnDefinition {
         CLUSTERING_KEY
     }
 
+    /**
+     * The annotation that this definition was derived from.
+     */
+    public Column getAnnotation();    
+    
     /**
      * If true, this definition should not be created during a "CREATE TABLE" CQL statement; it is created by Cassandra
      * itself, or by integrations thereof, like DSE/Solr.
@@ -35,5 +45,10 @@ public interface ColumnDefinition {
      * No implementation should return NULL.
      */
     public ColumnOption getColumnOption();
+
+    /**
+     * Encode relevant portion(s) of object as an entry in result.
+     */
+	public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException;
 
 }

@@ -5,6 +5,8 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.ColumnDefinition;
 import com.clearcapital.oss.cassandra.TemporaryTable;
@@ -24,6 +26,8 @@ import com.datastax.driver.core.schemabuilder.Create.Options;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class TableBuilder extends TableProcessor<TableBuilder> {
+	
+	private static Logger log = LoggerFactory.getLogger(TableBuilder.class);
 
     TableBuilder(CommandExecutor executor, MultiRingClientManager manager, final Class<?> tableClass)
             throws AssertException {
@@ -125,15 +129,19 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             if (definition.getColumnOption() != null) {
                 switch (definition.getColumnOption()) {
                     case PARTITION_KEY:
+                    	log.debug("Adding partition key column:" + definition.getColumnName());
                         create.addPartitionKey(definition.getColumnName(), definition.getDataType());
                         break;
                     case CLUSTERING_KEY:
+                    	log.debug("Adding clustering column:" + definition.getColumnName());
                         create.addClusteringColumn(definition.getColumnName(), definition.getDataType());
                         break;
                     case STATIC:
+                    	log.debug("Adding static column:" + definition.getColumnName());
                         create.addStaticColumn(definition.getColumnName(), definition.getDataType());
                         break;
                     case NULL:
+                    	log.debug("Adding column:" + definition.getColumnName());
                         create.addColumn(definition.getColumnName(), definition.getDataType());
                         break;
                 }
@@ -149,6 +157,7 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             return false;
         }
         for (ClusteringOrder definition : clusteringOrder) {
+        	log.debug("Adding clustering order:" + definition.columnName() + " " + ( definition.descending() ? "DESC" : "ASC") );
             options.clusteringOrder(definition.columnName(),
                     definition.descending() ? SchemaBuilder.Direction.DESC : SchemaBuilder.Direction.ASC);
         }

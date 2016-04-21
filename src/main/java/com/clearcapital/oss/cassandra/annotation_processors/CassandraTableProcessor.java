@@ -12,9 +12,11 @@ import com.clearcapital.oss.cassandra.ColumnDefinition;
 import com.clearcapital.oss.cassandra.JsonColumnDefinition;
 import com.clearcapital.oss.cassandra.PlaceholderColumnDefinition;
 import com.clearcapital.oss.cassandra.ReflectionColumnDefinition;
+import com.clearcapital.oss.cassandra.RingClient;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.cassandra.configuration.AutoSchemaConfiguration;
+import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
@@ -125,7 +127,7 @@ public class CassandraTableProcessor {
                 PlaceholderColumnDefinition placeholderColumn = PlaceholderColumnDefinition.builder()
                         .fromAnnotation(column).build();
                 listBuilder.add(placeholderColumn);
-                mapBuilder.put(placeholderColumn.getColumnName(), placeholderColumn);
+                mapBuilder.put(placeholderColumn.getColumnName().toLowerCase(), placeholderColumn);
             }
         }
         ImmutableList<ColumnDefinition> list = listBuilder.build();
@@ -139,4 +141,9 @@ public class CassandraTableProcessor {
     }
 
 
+    public static void dropTableIfExists(MultiRingClientManager clientManager, final Class<?> tableClass) throws AssertException, CassandraException {
+    	CassandraTable annotation = getAnnotation(tableClass);
+    	RingClient client = clientManager.getRingClientForGroup(annotation.multiRingGroup());
+    	client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
+    }
 }
