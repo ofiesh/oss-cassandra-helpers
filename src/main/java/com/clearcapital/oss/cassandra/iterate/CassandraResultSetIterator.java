@@ -9,7 +9,7 @@ import com.clearcapital.oss.cassandra.exceptions.CassandraDeserializationExcepti
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
-public class CassandraResultSetIterator<E> implements Iterator<E> {
+public class CassandraResultSetIterator<E> implements Iterator<E>, Iterable<E> {
 
     private static Logger log = LoggerFactory.getLogger(CassandraResultSetIterator.class);
     private final Iterator<Row> iterator;
@@ -44,6 +44,11 @@ public class CassandraResultSetIterator<E> implements Iterator<E> {
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return this;
     }
 
 }

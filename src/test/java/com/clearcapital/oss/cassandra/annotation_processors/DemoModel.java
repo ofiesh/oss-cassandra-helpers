@@ -4,59 +4,61 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class DemoModel {
-	public Long id;
-	public Long updateId;
-	public String fluidType;
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public Long id;
+    public Long updateId;
+    public String fluidType;
 
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(this, id, updateId, fluidType);
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof DemoModel) {
-			DemoModel that = (DemoModel) obj;
-			return Objects.equal(id, that.id) && Objects.equal(updateId, that.updateId)
-					&& Objects.equal(fluidType, that.fluidType);
-		}
-		return false;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(this, id, updateId, fluidType);
+    }
 
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this).add("id", id).add("updateId", updateId).add("fluidType", fluidType)
-				.toString();
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof DemoModel) {
+            DemoModel that = (DemoModel) obj;
+            return Objects.equal(id, that.id) && Objects.equal(updateId, that.updateId)
+                    && Objects.equal(fluidType, that.fluidType);
+        }
+        return false;
+    }
 
-	public static class Builder {
-		DemoModel result;
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("id", id).add("updateId", updateId).add("fluidType", fluidType)
+                .toString();
+    }
 
-		Builder() {
-			result = new DemoModel();
-		}
+    public static class Builder {
 
-		public DemoModel build() {
-			return result;
-		}
+        DemoModel result;
 
-		public Builder setId(Long value) {
-			result.id = value;
-			return this;
-		}
+        Builder() {
+            result = new DemoModel();
+        }
 
-		public Builder setUpdateId(Long value) {
-			result.updateId = value;
-			return this;
-		}
+        public DemoModel build() {
+            return result;
+        }
 
-		public Builder setFluidType(String value) {
-			result.fluidType = value;
-			return this;
-		}
-	}
+        public Builder setId(Long value) {
+            result.id = value;
+            return this;
+        }
+
+        public Builder setUpdateId(Long value) {
+            result.updateId = value;
+            return this;
+        }
+
+        public Builder setFluidType(String value) {
+            result.fluidType = value;
+            return this;
+        }
+    }
 }

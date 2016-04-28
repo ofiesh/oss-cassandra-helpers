@@ -12,6 +12,7 @@ package com.clearcapital.oss.cassandra.annotations;
  * </p>
  *
  * <ul>
+ * <li>{@link manualColumnInfo} - the table class is responsible for "codecing" this column.</li>
  * <li>{@link reflectionColumnInfo} - use Reflection to get/set the specified member.</li>
  * <li>{@link jsonColumnInfo} - use JSON to codec the entire model object</li>
  * </ul>
@@ -23,6 +24,8 @@ public @interface Column {
     String cassandraName();
 
     boolean createdElsewhere() default false;
+
+    ManualColumnInfo manualColumnInfo() default @ManualColumnInfo(isSelected = false);
 
     ReflectionColumnInfo reflectionColumnInfo() default @ReflectionColumnInfo(isSelected = false);
 

@@ -28,54 +28,55 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
  * @author eehlinger
  */
 @CassandraTable( // @formatter:off
-	multiRingGroup = "groupA", 
-	tableName = "testCreateTable", 
-	modelClass = DemoModel.class, 
-	columns = { 
-		@Column(cassandraName = DemoTable.ID_COLUMN, 
-				reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.ID_COLUMN }, 
-				dataType = CassandraDataType.BIGINT, 
-				columnOption = ColumnOption.PARTITION_KEY)),
-		@Column(cassandraName = DemoTable.UPDATE_ID_COLUMN, 
-				reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.UPDATE_ID_COLUMN }, 
-				dataType = CassandraDataType.BIGINT, 
-				columnOption = ColumnOption.CLUSTERING_KEY)),		
-		@Column(cassandraName = DemoTable.FLUID_TYPE_COLUMN, 
-				reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.FLUID_TYPE_COLUMN }, 
-				dataType = CassandraDataType.TEXT)),
-		@Column(cassandraName = DemoTable.JSON_COLUMN, 
-				jsonColumnInfo = @JsonColumnInfo(model = DemoModel.class)) }, 
-	clusteringOrder = { @ClusteringOrder(columnName = DemoTable.UPDATE_ID_COLUMN, descending = true) },
-	properties = @TableProperties(comment = "hello")) // @formatter:on
+        multiRingGroup = "groupA", 
+        tableName = "testCreateTable", 
+        modelClass = DemoModel.class, 
+        columns = { 
+                @Column(cassandraName = DemoTable.ID_COLUMN, 
+                        reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.ID_COLUMN }, 
+                        dataType = CassandraDataType.BIGINT, 
+                        columnOption = ColumnOption.PARTITION_KEY)),
+                @Column(cassandraName = DemoTable.UPDATE_ID_COLUMN, 
+                        reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.UPDATE_ID_COLUMN }, 
+                        dataType = CassandraDataType.BIGINT, 
+                        columnOption = ColumnOption.CLUSTERING_KEY)),		
+                @Column(cassandraName = DemoTable.FLUID_TYPE_COLUMN, 
+                        reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.FLUID_TYPE_COLUMN }, 
+                        dataType = CassandraDataType.TEXT)),
+                @Column(cassandraName = DemoTable.JSON_COLUMN, 
+                        jsonColumnInfo = @JsonColumnInfo(model = DemoModel.class)) }, 
+        clusteringOrder = { @ClusteringOrder(columnName = DemoTable.UPDATE_ID_COLUMN, descending = true) },
+        properties = @TableProperties(comment = "hello")) // @formatter:on
 public class DemoTable extends CassandraTableImpl<DemoTable, DemoModel> {
 
-	public static final String ID_COLUMN = "id";
-	public static final String UPDATE_ID_COLUMN = "updateId";
-	public static final String JSON_COLUMN = "json";
-	public static final String FLUID_TYPE_COLUMN = "fluidType";
-	public static final String EXTRA_COLUMN = "extraColumn";
+    public static final String ID_COLUMN = "id";
+    public static final String UPDATE_ID_COLUMN = "updateId";
+    public static final String JSON_COLUMN = "json";
+    public static final String FLUID_TYPE_COLUMN = "fluidType";
+    public static final String EXTRA_COLUMN = "extraColumn";
 
-	private PreparedStatement psInsert;
-	private PreparedStatement psReadById;
+    private PreparedStatement psInsert;
+    private PreparedStatement psReadById;
 
-	public DemoTable(MultiRingClientManager multiRingClientManager) throws AssertException {
-		super(multiRingClientManager);
+    public DemoTable(MultiRingClientManager multiRingClientManager) throws AssertException {
+        super(multiRingClientManager);
 
-		psInsert = prepareInsertStatement(ConsistencyLevel.LOCAL_QUORUM);
-		
-		psReadById = prepareStatement(QueryBuilder.select(JSON_COLUMN).from(getTableName())
-				.where(QueryBuilder.eq(ID_COLUMN, QueryBuilder.bindMarker())), ConsistencyLevel.LOCAL_QUORUM);
-	}
+        psInsert = prepareInsertStatement(ConsistencyLevel.LOCAL_QUORUM);
 
-	public Command insert(DemoModel value) throws AssertException, ReflectionPathException, SerializingException {
-		Map<String, Object> fields = getFields(value);
-		CassandraCommand result = CassandraCommand.builder(getSession())
-				.setStatement(psInsert.bind(fields.values().toArray())).build();
-		return result;
-	}
+        psReadById = prepareStatement(QueryBuilder.select(JSON_COLUMN).from(getTableName())
+                .where(QueryBuilder.eq(ID_COLUMN, QueryBuilder.bindMarker())).limit(1), 
+                ConsistencyLevel.LOCAL_QUORUM);
+    }
 
-	public DemoModel read(Long id) throws CassandraException, AssertException {
-		return readList(psReadById.bind(id)).next();
-	}
+    public Command insert(DemoModel value) throws AssertException, ReflectionPathException, SerializingException {
+        Map<String, Object> fields = getFields(value);
+        CassandraCommand result = CassandraCommand.builder(getSession())
+                .setStatement(psInsert.bind(fields.values().toArray())).build();
+        return result;
+    }
+
+    public DemoModel read(Long id) throws CassandraException, AssertException {
+        return readIterable(psReadById.bind(id)).iterator().next();
+    }
 
 }

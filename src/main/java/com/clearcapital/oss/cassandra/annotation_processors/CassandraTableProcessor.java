@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.ColumnDefinition;
 import com.clearcapital.oss.cassandra.JsonColumnDefinition;
+import com.clearcapital.oss.cassandra.ManualColumnDefinition;
 import com.clearcapital.oss.cassandra.PlaceholderColumnDefinition;
 import com.clearcapital.oss.cassandra.ReflectionColumnDefinition;
 import com.clearcapital.oss.cassandra.RingClient;
@@ -123,6 +124,10 @@ public class CassandraTableProcessor {
                 JsonColumnDefinition jsonColumn = JsonColumnDefinition.builder().fromAnnotation(column).build();
                 listBuilder.add(jsonColumn);
                 mapBuilder.put(jsonColumn.getColumnName().toLowerCase(), jsonColumn);
+            } else if (column.manualColumnInfo().isSelected()) {
+                ManualColumnDefinition manualColumn = ManualColumnDefinition.builder().fromAnnotation(column).build();
+                listBuilder.add(manualColumn);
+                mapBuilder.put(manualColumn.getColumnName().toLowerCase(), manualColumn);
             } else if (column.createdElsewhere()) {
                 PlaceholderColumnDefinition placeholderColumn = PlaceholderColumnDefinition.builder()
                         .fromAnnotation(column).build();
@@ -140,10 +145,12 @@ public class CassandraTableProcessor {
         columnDefinitionMaps.put(annotation, map);
     }
 
-
-    public static void dropTableIfExists(MultiRingClientManager clientManager, final Class<?> tableClass) throws AssertException, CassandraException {
-    	CassandraTable annotation = getAnnotation(tableClass);
-    	RingClient client = clientManager.getRingClientForGroup(annotation.multiRingGroup());
-    	client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
+    public static void dropTableIfExists(MultiRingClientManager clientManager, final Class<?> tableClass)
+            throws AssertException, CassandraException {
+        CassandraTable annotation = getAnnotation(tableClass);
+        RingClient client = clientManager.getRingClientForGroup(annotation.multiRingGroup());
+        if (client.keyspaceExists(client.getPreferredKeyspaceName())) {
+            client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
+        }
     }
 }

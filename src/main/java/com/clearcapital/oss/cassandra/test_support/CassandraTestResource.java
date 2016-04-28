@@ -2,16 +2,23 @@ package com.clearcapital.oss.cassandra.test_support;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.io.IOException;
 import java.util.Collection;
 
+import org.apache.http.client.ClientProtocolException;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
 import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
+import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
+import com.clearcapital.oss.commands.CommandExecutionException;
+import com.clearcapital.oss.executors.ImmediateCommandExecutor;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.clearcapital.oss.json.JsonSerializer;
+import com.datastax.driver.core.TableMetadata;
 import com.thenewentity.utils.dropwizard.MultipleConfigurationMerger;
 
 /**
@@ -23,38 +30,52 @@ import com.thenewentity.utils.dropwizard.MultipleConfigurationMerger;
  */
 public class CassandraTestResource extends ExternalResource {
 
-	public static Logger log = LoggerFactory.getLogger(CassandraTestResource.class);
+    public static Logger log = LoggerFactory.getLogger(CassandraTestResource.class);
 
-	public final MultiRingClientManager multiRingClientManager;
+    public final MultiRingClientManager multiRingClientManager;
 
-	public CassandraTestResource(Collection<String> configPaths) {
-		multiRingClientManager = buildClient(configPaths);
-	}
+    public CassandraTestResource(Collection<String> configPaths) {
+        multiRingClientManager = buildClient(configPaths);
+    }
 
-	private static MultiRingClientManager buildClient(Collection<String> configPaths) {
-		try {
+    private static MultiRingClientManager buildClient(Collection<String> configPaths) {
+        try {
             // @formatter:off
             MultipleConfigurationMerger merger = MultipleConfigurationMerger.builder()
                     .setObjectMapper(JsonSerializer.getInstance().getObjectMapper())
                     .build();
             // @formatter:on
 
-			MultiRingConfiguration config = merger.loadConfigs(configPaths,
-					MultiRingConfiguration.class);
-			return new MultiRingClientManager(config);
-		} catch (AssertException e) {
-			log.error("Failed to buildClient", e);
-			return null;
-		}
+            MultiRingConfiguration config = merger.loadConfigs(configPaths, MultiRingConfiguration.class);
+            return new MultiRingClientManager(config);
+        } catch (AssertException e) {
+            log.error("Failed to buildClient", e);
+            return null;
+        }
+    }
 
-	}
+    public void recreateTable(Class<?> tableClass) throws AssertException, CassandraException, ClientProtocolException,
+            CommandExecutionException, IOException {
+        CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+        CassandraTableProcessor.tableBuilder(new ImmediateCommandExecutor(), multiRingClientManager, tableClass)
+                .build();
+    }
 
-	public MultiRingClientManager getClient() {
-		return multiRingClientManager;
-	}
+    public MultiRingClientManager getClient() {
+        return multiRingClientManager;
+    }
 
-	@Override
-	protected void before() throws Throwable {
-		assertNotNull(multiRingClientManager);
-	}
+    @Override
+    protected void before() throws Throwable {
+        assertNotNull(multiRingClientManager);
+    }
+
+    public boolean tableExists(String group, String table) throws AssertException {
+        return multiRingClientManager.getRingClientForGroup(group).getPreferredKeyspace().tableExists(table);
+    }
+
+    public TableMetadata getTableMetadata(String group, String table) throws AssertException {
+        return multiRingClientManager.getRingClientForGroup(group).getPreferredKeyspace().getTableMetadata(table);
+    }
+
 }

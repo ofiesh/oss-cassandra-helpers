@@ -26,8 +26,8 @@ import com.datastax.driver.core.schemabuilder.Create.Options;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class TableBuilder extends TableProcessor<TableBuilder> {
-	
-	private static Logger log = LoggerFactory.getLogger(TableBuilder.class);
+
+    private static Logger log = LoggerFactory.getLogger(TableBuilder.class);
 
     TableBuilder(CommandExecutor executor, MultiRingClientManager manager, final Class<?> tableClass)
             throws AssertException {
@@ -55,8 +55,7 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         Create create = SchemaBuilder.createTable(tableName);
         addColumnDefinitions(create, columnDefinitions);
         Options createWithOptions = create.withOptions();
-        boolean hasOptions = TablePropertiesProcessor.encodeTableProperties(createWithOptions,
-                annotation.properties());
+        boolean hasOptions = TablePropertiesProcessor.encodeTableProperties(createWithOptions, annotation.properties());
         hasOptions |= addClusteringOrders(createWithOptions, clusteringOrder);
 
         if (hasOptions) {
@@ -129,19 +128,19 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             if (definition.getColumnOption() != null) {
                 switch (definition.getColumnOption()) {
                     case PARTITION_KEY:
-                    	log.debug("Adding partition key column:" + definition.getColumnName());
+                        log.debug("Adding partition key column:" + definition.getColumnName());
                         create.addPartitionKey(definition.getColumnName(), definition.getDataType());
                         break;
                     case CLUSTERING_KEY:
-                    	log.debug("Adding clustering column:" + definition.getColumnName());
+                        log.debug("Adding clustering column:" + definition.getColumnName());
                         create.addClusteringColumn(definition.getColumnName(), definition.getDataType());
                         break;
                     case STATIC:
-                    	log.debug("Adding static column:" + definition.getColumnName());
+                        log.debug("Adding static column:" + definition.getColumnName());
                         create.addStaticColumn(definition.getColumnName(), definition.getDataType());
                         break;
                     case NULL:
-                    	log.debug("Adding column:" + definition.getColumnName());
+                        log.debug("Adding column:" + definition.getColumnName());
                         create.addColumn(definition.getColumnName(), definition.getDataType());
                         break;
                 }
@@ -157,7 +156,8 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             return false;
         }
         for (ClusteringOrder definition : clusteringOrder) {
-        	log.debug("Adding clustering order:" + definition.columnName() + " " + ( definition.descending() ? "DESC" : "ASC") );
+            log.debug("Adding clustering order:" + definition.columnName() + " "
+                    + (definition.descending() ? "DESC" : "ASC"));
             options.clusteringOrder(definition.columnName(),
                     definition.descending() ? SchemaBuilder.Direction.DESC : SchemaBuilder.Direction.ASC);
         }

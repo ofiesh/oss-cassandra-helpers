@@ -19,8 +19,8 @@ public interface ColumnDefinition {
     /**
      * The annotation that this definition was derived from.
      */
-    public Column getAnnotation();    
-    
+    public Column getAnnotation();
+
     /**
      * If true, this definition should not be created during a "CREATE TABLE" CQL statement; it is created by Cassandra
      * itself, or by integrations thereof, like DSE/Solr.
@@ -49,6 +49,6 @@ public interface ColumnDefinition {
     /**
      * Encode relevant portion(s) of object as an entry in result.
      */
-	public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException;
+    public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException;
 
 }
