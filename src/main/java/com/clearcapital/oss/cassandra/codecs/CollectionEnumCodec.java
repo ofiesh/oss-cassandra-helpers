@@ -17,14 +17,14 @@ import com.clearcapital.oss.json.JsonSerializer;
  *
  * {@code CollectionCodec} is thread safe.
  */
-public class CollectionCodec implements CassandraColumnCodec {
+public class CollectionEnumCodec<T extends Enum<T>> implements CassandraColumnCodec {
 
     Collection<String> reflectionPath;
     String cassandraColumnName;
-    Class<?> modelClass;
+    Class<T> modelClass;
 
-    public static Builder builder() {
-        return new Builder(new CollectionCodec());
+    public static <T extends Enum<T>> Builder<T> builder() {
+        return new Builder<T>(new CollectionEnumCodec<T>());
     }
 
     Class<? extends Collection<?>> getCollectionClass() {
@@ -33,30 +33,30 @@ public class CollectionCodec implements CassandraColumnCodec {
         return result;
     }
 
-    public static class Builder {
+    public static class Builder<T extends Enum<T>> {
 
-        private CollectionCodec result;
+        private CollectionEnumCodec<T> result;
 
-        Builder(CollectionCodec result) {
+        Builder(CollectionEnumCodec<T> result) {
             this.result = result;
         }
 
-        public Builder setReflectionPath(Collection<String> value) {
+        public Builder<T> setReflectionPath(Collection<String> value) {
             result.reflectionPath = value;
             return this;
         }
 
-        public Builder setCassandraColumnName(String value) {
+        public Builder<T> setCassandraColumnName(String value) {
             result.cassandraColumnName = value;
             return this;
         }
 
-        public Builder setModelClass(Class<?> value) {
+        public Builder<T> setModelClass(Class<T> value) {
             result.modelClass = value;
             return this;
         }
 
-        public CollectionCodec build() throws AssertException {
+        public CollectionEnumCodec<T> build() throws AssertException {
             AssertHelpers.notNull(result, "result");
             AssertHelpers.notNull(result.modelClass, "result.modelClass");
             AssertHelpers.notNull(result.reflectionPath, "result.reflectionPath");
@@ -81,11 +81,7 @@ public class CollectionCodec implements CassandraColumnCodec {
                 Collection<Object> fieldSet = (Collection<Object>) fieldValue;
 
                 for (Object item : fieldSet) {
-                    if (item instanceof Enum) {
-                        collection.add(item.toString());
-                    } else {
-                        collection.add(JsonSerializer.getInstance().getStringRepresentation(item));
-                    }
+                    collection.add(item.toString());
                 }
             }
             target.put(cassandraColumnName, collection);
@@ -109,13 +105,18 @@ public class CollectionCodec implements CassandraColumnCodec {
 
         for (Object value : fieldSet) {
             if (value != null) {
-                collection.add(JsonSerializer.getInstance().getObject((String) value, modelClass));
+                addObjectToEnumCollection(collection, value);
             } else {
                 collection.add(null);
             }
         }
 
         ReflectionHelpers.setFieldValue(target, reflectionPath, collection);
+    }
+
+    private void addObjectToEnumCollection(Collection<Object> collection, Object value) throws AssertException {
+        AssertHelpers.isTrue(value instanceof String, "Trying to decode something other than a String into an Enum");
+        collection.add(Enum.valueOf(modelClass, (String) value));
     }
 
 }

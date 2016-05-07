@@ -1,19 +1,20 @@
 package com.clearcapital.oss.cassandra.codecs;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.ws.rs.core.Response.Status;
-
-import com.clearcapital.core.util.exceptions.CoreException;
-import com.clearcapital.core.util.exceptions.CoreExceptionFactory;
+import com.clearcapital.oss.java.ReflectionHelpers;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 
 public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraColumnCodec {
 
     private final String prefix;
     private final Class<?> keyType;
+    private Collection<String> reflectionPath;
+    private String cassandraColumnName;
 
     public MapCodec(String prefix, Class<?> keyType) {
         this.prefix = prefix;
@@ -21,21 +22,19 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraColumnCodec {
     }
 
     @Override
-    public void encodeColumn(Map<String, Object> target, Object sourceObject, CassandraColumnDefinition columnDefinition)
-            throws CoreException {
+    public void encodeColumn(Map<String, Object> target, Object sourceObject) throws Exception {
         Map<String, VALUE_TYPE> encodedMap = null;
-        Object rawFieldValue = CassandraTableProcessor.getFieldValue(sourceObject, columnDefinition);
+        Object rawFieldValue = ReflectionHelpers.getFieldValue(sourceObject, reflectionPath);
         if (rawFieldValue != null) {
             @SuppressWarnings("unchecked")
             Map<?, VALUE_TYPE> decodedMap = (Map<?, VALUE_TYPE>) rawFieldValue;
             encodedMap = encode(decodedMap, prefix);
         }
-        target.put(columnDefinition.getCassandraName(), encodedMap);
+        target.put(cassandraColumnName, encodedMap);
     }
 
     @Override
-    public void decodeColumn(Object target, Object fieldValue, CassandraColumnDefinition columnDefinition)
-            throws CoreException {
+    public void decodeColumn(Object target, Object fieldValue) throws Exception {
         if (fieldValue == null) {
             return;
         }
@@ -43,7 +42,7 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraColumnCodec {
         @SuppressWarnings("unchecked")
         Map<String, VALUE_TYPE> encodedMap = (Map<String, VALUE_TYPE>) fieldValue;
         Map<KEY_TYPE, VALUE_TYPE> decodedMap = decode(encodedMap, prefix, keyType);
-        CassandraTableProcessor.setFieldValue(target, decodedMap, columnDefinition);
+        ReflectionHelpers.setFieldValue(target, reflectionPath, decodedMap);
     }
 
     public static <VALUE_TYPE> Map<String, VALUE_TYPE> encode(Map<?, VALUE_TYPE> rawObject, String prefix) {
@@ -59,17 +58,17 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraColumnCodec {
     }
 
     @SuppressWarnings("unchecked")
-    public static <K> K decodeKey(String decodedKeyString, Type type) throws CoreException {
+    public static <K> K decodeKey(String decodedKeyString, Type type) throws Exception {
         if (type == String.class) {
             return (K) decodedKeyString;
         }
         if (type == Long.class) {
             return (K) Long.valueOf(decodedKeyString);
         }
-        throw CoreExceptionFactory.createException("Unrecognized target key type", Status.INTERNAL_SERVER_ERROR);
+        throw new DeserializingException("Unrecognized target key type", null);
     }
 
-    public static <K, V> Map<K, V> decode(Map<String, V> map, String prefix, Class<?> keyType) throws CoreException {
+    public static <K, V> Map<K, V> decode(Map<String, V> map, String prefix, Class<?> keyType) throws Exception {
         if (map == null) {
             return null;
         }

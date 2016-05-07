@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface CassandraColumnCodec {
 
-    public void encodeColumn(Map<String, Object> target, Object sourceObject);
+    public void encodeColumn(Map<String, Object> target, Object sourceObject) throws Exception;
 
-    public void decodeColumn(Object target, final Object fieldValue);
+    public void decodeColumn(Object target, final Object fieldValue) throws Exception;
 }
