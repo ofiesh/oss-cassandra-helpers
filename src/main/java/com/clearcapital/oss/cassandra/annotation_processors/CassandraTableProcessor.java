@@ -116,6 +116,8 @@ public class CassandraTableProcessor {
         ImmutableList.Builder<ColumnDefinition> listBuilder = ImmutableList.<ColumnDefinition> builder();
         for (Column column : annotation.columns()) {
             if (column.reflectionColumnInfo().isSelected()) {
+                /** TODO: figure out a way to validate that the {@link ReflectionColumnDefinition#reflectionPath} points to a
+                 * field that actually exists. */
                 ReflectionColumnDefinition reflectionColumn = ReflectionColumnDefinition.builder()
                         .fromAnnotation(column).build();
                 listBuilder.add(reflectionColumn);
@@ -153,4 +155,5 @@ public class CassandraTableProcessor {
             client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
         }
     }
+
 }

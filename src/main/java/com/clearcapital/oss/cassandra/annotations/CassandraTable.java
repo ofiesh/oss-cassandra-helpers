@@ -62,8 +62,6 @@ public @interface CassandraTable {
 
     boolean sortFields() default false;
 
-    ClusteringOrder[] clusteringOrder() default {};
-
     AdditionalIndex[] additionalIndexes() default {};
 
     SolrOptions solrOptions() default @SolrOptions(enabled = false);

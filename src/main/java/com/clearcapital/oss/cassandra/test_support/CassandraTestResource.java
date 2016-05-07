@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
+import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
@@ -56,9 +57,18 @@ public class CassandraTestResource extends ExternalResource {
 
     public void recreateTable(Class<?> tableClass) throws AssertException, CassandraException, ClientProtocolException,
             CommandExecutionException, IOException {
-        CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+        while (tableExists(CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup(),
+                CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+            CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+        }
         CassandraTableProcessor.tableBuilder(new ImmediateCommandExecutor(), multiRingClientManager, tableClass)
                 .build();
+    }
+
+    public void truncateTable(Class<?> tableClass) throws AssertException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(tableClass);
+        multiRingClientManager.getRingClientForGroup(annotation.multiRingGroup()).getPreferredKeyspace()
+                .truncateTable(annotation.tableName());
     }
 
     public MultiRingClientManager getClient() {

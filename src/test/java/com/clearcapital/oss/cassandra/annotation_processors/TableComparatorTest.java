@@ -60,8 +60,6 @@ public class TableComparatorTest {
 
         SessionHelper session = null;
         String tableName = CQLHelpers.getUniqueName("tmp_");
-        
-        
 
         try (TemporaryTable tempTable = CassandraTableProcessor
                 .tableBuilder(executor, cassandraResource.getClient(), DemoTable.class).setTableName(tableName)

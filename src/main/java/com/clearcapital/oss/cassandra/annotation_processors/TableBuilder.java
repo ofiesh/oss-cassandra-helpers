@@ -8,10 +8,10 @@ import org.apache.http.client.ClientProtocolException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.ColumnDefinition;
 import com.clearcapital.oss.cassandra.TemporaryTable;
 import com.clearcapital.oss.cassandra.annotations.AdditionalIndex;
-import com.clearcapital.oss.cassandra.annotations.ClusteringOrder;
 import com.clearcapital.oss.cassandra.annotations.SolrOptions;
 import com.clearcapital.oss.cassandra.annotations.SolrTableConfigFile;
 import com.clearcapital.oss.cassandra.bundles.CassandraCommand;
@@ -44,7 +44,6 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             return;
         }
 
-        ClusteringOrder[] clusteringOrder = annotation.clusteringOrder();
         AdditionalIndex[] additionalIndexes = annotation.additionalIndexes();
 
         Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor.getColumnDefinitionList(annotation);
@@ -56,7 +55,7 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         addColumnDefinitions(create, columnDefinitions);
         Options createWithOptions = create.withOptions();
         boolean hasOptions = TablePropertiesProcessor.encodeTableProperties(createWithOptions, annotation.properties());
-        hasOptions |= addClusteringOrders(createWithOptions, clusteringOrder);
+        hasOptions |= addClusteringOrders(createWithOptions, columnDefinitions);
 
         if (hasOptions) {
             executor.addCommand(CassandraCommand.builder(getSession()).setStatement(createWithOptions).build());
@@ -126,22 +125,26 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
             }
 
             if (definition.getColumnOption() != null) {
+                // This allows creating columns with keywords for names, like "password".
+                String columnName = getEscapedColumnName(definition);
+
                 switch (definition.getColumnOption()) {
                     case PARTITION_KEY:
-                        log.debug("Adding partition key column:" + definition.getColumnName());
-                        create.addPartitionKey(definition.getColumnName(), definition.getDataType());
+                        log.debug("Adding partition key column:" + columnName);
+                        create.addPartitionKey(columnName, definition.getDataType());
                         break;
-                    case CLUSTERING_KEY:
-                        log.debug("Adding clustering column:" + definition.getColumnName());
-                        create.addClusteringColumn(definition.getColumnName(), definition.getDataType());
+                    case CLUSTERING_KEY_ASC:
+                    case CLUSTERING_KEY_DESC:
+                        log.debug("Adding clustering column:" + columnName);
+                        create.addClusteringColumn(columnName, definition.getDataType());
                         break;
                     case STATIC:
-                        log.debug("Adding static column:" + definition.getColumnName());
-                        create.addStaticColumn(definition.getColumnName(), definition.getDataType());
+                        log.debug("Adding static column:" + columnName);
+                        create.addStaticColumn(columnName, definition.getDataType());
                         break;
                     case NULL:
-                        log.debug("Adding column:" + definition.getColumnName());
-                        create.addColumn(definition.getColumnName(), definition.getDataType());
+                        log.debug("Adding column:" + columnName);
+                        create.addColumn(columnName, definition.getDataType());
                         break;
                 }
             } else {
@@ -151,17 +154,40 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         }
     }
 
-    private static boolean addClusteringOrders(Options options, ClusteringOrder[] clusteringOrder) {
-        if (clusteringOrder == null || clusteringOrder.length == 0) {
-            return false;
+    private static String getEscapedColumnName(ColumnDefinition definition) {
+        String columnName = definition.getColumnName();
+        if (columnName.equals("password")) {
+            columnName = "\"" + CQLHelpers.escapeCqlString(columnName) + "\"";
         }
-        for (ClusteringOrder definition : clusteringOrder) {
-            log.debug("Adding clustering order:" + definition.columnName() + " "
-                    + (definition.descending() ? "DESC" : "ASC"));
-            options.clusteringOrder(definition.columnName(),
-                    definition.descending() ? SchemaBuilder.Direction.DESC : SchemaBuilder.Direction.ASC);
+        return columnName;
+    }
+
+    private static boolean addClusteringOrders(Options options, final Collection<ColumnDefinition> columnDefinitions) {
+        boolean result = false;
+        for (ColumnDefinition definition : columnDefinitions) {
+            if (definition.getColumnOption() != null) {
+                String columnName = getEscapedColumnName(definition);
+                switch (definition.getColumnOption()) {
+                    case CLUSTERING_KEY_ASC:
+                        options.clusteringOrder(columnName, SchemaBuilder.Direction.ASC);
+                        result = true;
+                        break;
+                    case CLUSTERING_KEY_DESC:
+                        options.clusteringOrder(columnName, SchemaBuilder.Direction.DESC);
+                        result = true;
+                        break;
+                    case NULL:
+                    case PARTITION_KEY:
+                    case STATIC:
+                        // It might seem weird to have all of the options listed here, rather
+                        // then just a default: branch. We do this so that, on the off chance that the
+                        // enum is expanded later, the compiler will warn us that we need to reconsider
+                        // this method.
+                        break;
+                }
+            }
         }
-        return true;
+        return result;
     }
 
 }

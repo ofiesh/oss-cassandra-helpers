@@ -3,7 +3,12 @@ package com.clearcapital.oss.cassandra;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -11,13 +16,19 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
+import com.clearcapital.oss.cassandra.annotations.ReflectionColumnInfo;
+import com.clearcapital.oss.cassandra.bundles.CassandraCommand;
 import com.clearcapital.oss.cassandra.exceptions.CassandraDeserializationException;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.iterate.CassandraResultSetIterator;
 import com.clearcapital.oss.cassandra.iterate.CassandraRowDeserializer;
+import com.clearcapital.oss.cassandra.iterate.CassandraTableWalker;
+import com.clearcapital.oss.cassandra.iterate.WalkerGenerator;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
+import com.clearcapital.oss.commands.Command;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.UncheckedAssertHelpers;
@@ -32,8 +43,13 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * A helper class for developing table classes
@@ -43,7 +59,8 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
  * @param <ModelClass>
  *            - class to (de)code in Cassandra.
  */
-public class CassandraTableImpl<TableClass, ModelClass> implements CassandraRowDeserializer<ModelClass> {
+public class CassandraTableImpl<TableClass, ModelClass>
+        implements WalkerGenerator, CassandraRowDeserializer<ModelClass> {
 
     private static Logger log = LoggerFactory.getLogger(CassandraTableImpl.class);
 
@@ -51,47 +68,6 @@ public class CassandraTableImpl<TableClass, ModelClass> implements CassandraRowD
 
     public CassandraTableImpl(MultiRingClientManager multiRingClientManager) {
         this.multiRingClientManager = multiRingClientManager;
-    }
-
-    public MultiRingClientManager getMultiRingClientManager() {
-        return multiRingClientManager;
-    }
-
-    public Class<?> getModelClass() throws AssertException {
-        CassandraTable annotation = CassandraTableProcessor.getAnnotation(getTableClass());
-        return annotation.modelClass();
-    }
-
-    public Class<TableClass> getTableClass() {
-        ParameterizedType parameterizedType = ReflectionHelpers.getParameterizedType(getClass());
-        UncheckedAssertHelpers.isTrue(parameterizedType.getActualTypeArguments()[0] instanceof Class<?>,
-                "parameterizedType.getActualTypeArguments()[0] instanceof Class<?>");
-
-        @SuppressWarnings("unchecked")
-        Class<TableClass> result = (Class<TableClass>) parameterizedType.getActualTypeArguments()[0];
-        return result;
-    }
-
-    public CassandraTable getAnnotation() throws AssertException {
-        return CassandraTableProcessor.getAnnotation(getTableClass());
-    }
-
-    public RingClient getRingClient() throws AssertException {
-        String multiRingGroup = getAnnotation().multiRingGroup();
-        RingClient ringClientForGroup = multiRingClientManager.getRingClientForGroup(multiRingGroup);
-        return ringClientForGroup;
-    }
-
-    public SessionHelper getSession() throws AssertException {
-        return getRingClient().getPreferredKeyspace();
-    }
-
-    public String getTableName() throws AssertException {
-        return getAnnotation().tableName();
-    }
-
-    public PreparedStatement prepareStatement(RegularStatement statement) throws AssertException {
-        return getSession().prepare(statement);
     }
 
     public ModelClass deserializeRow(Row row) throws CassandraDeserializationException {
@@ -153,6 +129,122 @@ public class CassandraTableImpl<TableClass, ModelClass> implements CassandraRowD
         }
     }
 
+    public CassandraTable getAnnotation() throws AssertException {
+        return CassandraTableProcessor.getAnnotation(getTableClass());
+    }
+
+    public Class<?> getModelClass() throws AssertException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(getTableClass());
+        return annotation.modelClass();
+    }
+
+    public MultiRingClientManager getMultiRingClientManager() {
+        return multiRingClientManager;
+    }
+
+    public Class<TableClass> getTableClass() {
+        ParameterizedType parameterizedType = ReflectionHelpers.getParameterizedType(getClass());
+        UncheckedAssertHelpers.isTrue(parameterizedType.getActualTypeArguments()[0] instanceof Class<?>,
+                "parameterizedType.getActualTypeArguments()[0] instanceof Class<?>");
+
+        @SuppressWarnings("unchecked")
+        Class<TableClass> result = (Class<TableClass>) parameterizedType.getActualTypeArguments()[0];
+        return result;
+    }
+
+    public RingClient getRingClient() throws AssertException {
+        String multiRingGroup = getAnnotation().multiRingGroup();
+        RingClient ringClientForGroup = multiRingClientManager.getRingClientForGroup(multiRingGroup);
+        return ringClientForGroup;
+    }
+
+    public SessionHelper getSession() throws AssertException {
+        return getRingClient().getPreferredKeyspace();
+    }
+
+    public String getTableName() throws AssertException {
+        return getAnnotation().tableName();
+    }
+
+    /**
+     * Prepare the given {@code statement}
+     */
+    public PreparedStatement prepareStatement(RegularStatement statement) throws AssertException {
+        return getSession().prepare(statement);
+    }
+
+    /**
+     * Read the first record for {@code statement}, deserialized using {@code this}. If no records are returned from
+     * Cassandra, return null.
+     * 
+     * @throws AssertException
+     * @throws CassandraException
+     */
+    public ModelClass readFirst(Statement statement) throws CassandraException, AssertException {
+        return readFirst(statement, this);
+    }
+
+    /**
+     * Read the first record for {@code statement}, deserialized using {@code deserializer}. If no records are returned
+     * from Cassandra, return null.
+     * 
+     * @throws AssertException
+     * @throws CassandraException
+     */
+    public <E> E readFirst(Statement statement, CassandraRowDeserializer<E> deserializer)
+            throws CassandraException, AssertException {
+        for (E item : readIterable(statement, deserializer)) {
+            return item;
+        }
+        return null;
+    }
+
+    /**
+     * Read the results of {@code statement} into a collection (ImmutableList). 
+     * 
+     * <p>
+     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a good
+     * chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in the
+     * {@link CassandraTable#modelClass()}.
+     * </p>
+     */
+    public Collection<ModelClass> readCollection(Statement statement) throws CassandraException, AssertException {
+        return ImmutableList.<ModelClass> copyOf(readIterable(statement, this));
+    }
+
+    /**
+     * Read the results of a statement in an iterable form
+     * 
+     * @throws AssertException
+     * @throws CassandraException
+     */
+    public Iterable<ModelClass> readIterable(Statement statement) throws CassandraException, AssertException {
+        return readIterable(statement, this);
+    }
+
+    public <E> Iterable<E> readIterable(Statement statement, CassandraRowDeserializer<E> deserializer)
+            throws CassandraException, AssertException {
+        ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
+
+        return new CassandraResultSetIterator<E>(resultSet, deserializer);
+    }
+
+    protected Map<String, Object> getFields(final Object object)
+            throws AssertException, ReflectionPathException, SerializingException {
+        AssertHelpers.notNull(getTableClass(), "tableClass");
+        AssertHelpers.notNull(object, "object");
+
+        CassandraTable annotation = getAnnotation();
+        Map<String, Object> result = new TreeMap<String, Object>();
+
+        Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor.getColumnDefinitionList(annotation);
+        for (ColumnDefinition columnDefinition : columnDefinitions) {
+            columnDefinition.encode(result, object);
+        }
+
+        return result;
+    }
+
     protected PreparedStatement prepareInsertStatement(final ConsistencyLevel consistencyLevel) throws AssertException {
         return prepareInsertStatement(consistencyLevel, null, null);
     }
@@ -181,41 +273,81 @@ public class CassandraTableImpl<TableClass, ModelClass> implements CassandraRowD
     }
 
     /**
-     * Read the results of a statement in an iterable form
-     * 
-     * @throws AssertException
-     * @throws CassandraException
+     * Prepare the given {@code statement} at the given {@code consistencyLevel}
      */
-    public Iterable<ModelClass> readIterable(Statement statement)throws CassandraException, AssertException {
-        return readIterable(statement,this);
-    }
-    
-    public <E> Iterable<E> readIterable(Statement statement, CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
-        ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
-        
-        return new CassandraResultSetIterator<E>(resultSet, deserializer);
-    }
-
-    protected Map<String, Object> getFields(final Object object)
-            throws AssertException, ReflectionPathException, SerializingException {
-        AssertHelpers.notNull(getTableClass(), "tableClass");
-        AssertHelpers.notNull(object, "object");
-
-        CassandraTable annotation = getAnnotation();
-        Map<String, Object> result = new TreeMap<String, Object>();
-
-        Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor.getColumnDefinitionList(annotation);
-        for (ColumnDefinition columnDefinition : columnDefinitions) {
-            columnDefinition.encode(result, object);
-        }
-
-        return result;
-    }
-
     protected PreparedStatement prepareStatement(RegularStatement statement, ConsistencyLevel consistencyLevel)
             throws AssertException {
         statement.setConsistencyLevel(consistencyLevel);
         return prepareStatement(statement);
     }
 
+    protected Statement updateStatement(final Map<String, Object> fields, final List<String> forcedFields)
+            throws AssertException {
+        if (forcedFields != null) {
+            // Remove all fields which are *not* in forcedFields and which *are* null.
+            Set<Map.Entry<String, Object>> entries = fields.entrySet();
+            Set<String> removeKeys = new HashSet<String>();
+            for (Entry<String, Object> entry : entries) {
+                if (forcedFields.contains(entry.getKey())) {
+                    continue;
+                }
+                if (entry.getValue() == null) {
+                    removeKeys.add(entry.getKey());
+                }
+            }
+            fields.keySet().removeAll(removeKeys);
+        } else {
+            // remove all null fields.
+            fields.values().removeAll(Collections.singleton(null));
+        }
+
+        TableMetadata table = getSession().getTableMetadata(getTableName());
+
+        String[] fieldNames = new String[fields.keySet().size()];
+        fields.keySet().toArray(fieldNames);
+        Object[] values = fields.values().toArray();
+
+        Insert insert = QueryBuilder.insertInto(table).values(fieldNames, values);
+
+        return insert;
+    }
+
+    private Statement updateStatement(final ModelClass model, final List<String> forcedFields)
+            throws ReflectionPathException, AssertException, SerializingException {
+        Map<String, Object> fields = getFields(model);
+        return updateStatement(fields, forcedFields);
+    }
+
+    protected Command updateCommand(final ModelClass model, final List<String> forcedFields)
+            throws ReflectionPathException, AssertException, SerializingException {
+        return CassandraCommand.builder(getSession()).setStatement(updateStatement(model, forcedFields)).build();
+    }
+
+    public CassandraTableWalker.Builder<ModelClass> getWalker() throws AssertException {
+        return getWalker(this);
+    }
+
+    public <E> CassandraTableWalker.Builder<E> getWalker(final CassandraRowDeserializer<E> customDeserializer)
+            throws AssertException {
+        Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor
+                .getColumnDefinitionList(getAnnotation());
+
+        Iterable<String> keyColumnNames = Iterables
+                .transform(Iterables.filter(columnDefinitions, new Predicate<ColumnDefinition>() {
+
+                    @Override
+                    public boolean apply(ColumnDefinition object) {
+                        return ColumnOption.PARTITION_KEY.equals(object.getColumnOption());
+                    }
+                }), new Function<ColumnDefinition, String>() {
+
+                    @Override
+                    public String apply(ColumnDefinition input) {
+                        return input.getColumnName();
+                    }
+                });
+
+        return CassandraTableWalker.<E> builder().setSession(getSession()).setTableName(getTableName())
+                .setKeyColumnNames(keyColumnNames).setDeserializer(customDeserializer);
+    }
 }

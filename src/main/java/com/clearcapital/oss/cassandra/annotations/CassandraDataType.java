@@ -12,7 +12,7 @@ public enum CassandraDataType {
     INT(DataType.cint()),
     TEXT(DataType.text()),
     TIMESTAMP(DataType.timestamp()),
-    //
+    SET_TEXT(DataType.set(DataType.text())),
     LIST_TEXT(DataType.list(DataType.text())),
     // MAP_TEXTBIGINT("map<text, bigint>"),
     // MAP_TEXTBOOLEAN("map<text, boolean>"),
@@ -20,7 +20,6 @@ public enum CassandraDataType {
     // MAP_TEXTTEXT("map<text, text>"),
     // SET_BOOLEAN("set<boolean>"),
     // SET_DOUBLE("set<double>"),
-    // SET_TEXT("set<text>"),
     ;
 
     private final DataType dataType;
