@@ -27,9 +27,8 @@ public class CollectionCodec implements CassandraColumnCodec {
         return new Builder(new CollectionCodec());
     }
 
-    Class<? extends Collection<?>> getCollectionClass() {
-        @SuppressWarnings("unchecked")
-        Class<? extends Collection<?>> result = (Class<? extends Collection<?>>) ArrayList.class;
+    Class<?> getCollectionClass() {
+        Class<?> result = ArrayList.class;
         return result;
     }
 

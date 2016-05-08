@@ -7,7 +7,6 @@ import java.util.Map;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
-import com.clearcapital.oss.json.JsonSerializer;
 
 /*
  * A codec that can serialize and deserialize between a cql type {@code set<text>} and a Java type
@@ -27,9 +26,8 @@ public class CollectionEnumCodec<T extends Enum<T>> implements CassandraColumnCo
         return new Builder<T>(new CollectionEnumCodec<T>());
     }
 
-    Class<? extends Collection<?>> getCollectionClass() {
-        @SuppressWarnings("unchecked")
-        Class<? extends Collection<?>> result = (Class<? extends Collection<?>>) ArrayList.class;
+    Class<?> getCollectionClass() {
+        Class<?> result = ArrayList.class;
         return result;
     }
 

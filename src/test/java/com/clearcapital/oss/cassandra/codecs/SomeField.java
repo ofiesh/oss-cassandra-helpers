@@ -5,12 +5,14 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class SomeField {
+
     @JsonProperty
     private String foo;
     @JsonProperty
     private String bar;
 
-    public SomeField() {}
+    public SomeField() {
+    }
 
     @Override
     public boolean equals(final Object o) {
