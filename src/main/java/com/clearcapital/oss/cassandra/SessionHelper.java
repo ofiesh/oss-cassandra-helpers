@@ -25,6 +25,7 @@ import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.datastax.driver.core.exceptions.QueryExecutionException;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class SessionHelper {
@@ -181,5 +182,9 @@ public class SessionHelper {
 
     public void dropKeyspace(String keyspaceName) {
         session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName));
+    }
+
+    public void truncateTable(String tableName) {
+        session.execute(QueryBuilder.truncate(tableName));
     }
 }

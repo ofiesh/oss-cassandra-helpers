@@ -6,7 +6,6 @@ import com.clearcapital.oss.cassandra.CassandraTableImpl;
 import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotations.CassandraDataType;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
-import com.clearcapital.oss.cassandra.annotations.ClusteringOrder;
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.cassandra.annotations.JsonColumnInfo;
 import com.clearcapital.oss.cassandra.annotations.ReflectionColumnInfo;
@@ -39,13 +38,12 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
                 @Column(cassandraName = DemoTable.UPDATE_ID_COLUMN, 
                         reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.UPDATE_ID_COLUMN }, 
                         dataType = CassandraDataType.BIGINT, 
-                        columnOption = ColumnOption.CLUSTERING_KEY)),		
+                        columnOption = ColumnOption.CLUSTERING_KEY_DESC)),		
                 @Column(cassandraName = DemoTable.FLUID_TYPE_COLUMN, 
                         reflectionColumnInfo = @ReflectionColumnInfo(javaPath = { DemoTable.FLUID_TYPE_COLUMN }, 
                         dataType = CassandraDataType.TEXT)),
                 @Column(cassandraName = DemoTable.JSON_COLUMN, 
                         jsonColumnInfo = @JsonColumnInfo(model = DemoModel.class)) }, 
-        clusteringOrder = { @ClusteringOrder(columnName = DemoTable.UPDATE_ID_COLUMN, descending = true) },
         properties = @TableProperties(comment = "hello")) // @formatter:on
 public class DemoTable extends CassandraTableImpl<DemoTable, DemoModel> {
 

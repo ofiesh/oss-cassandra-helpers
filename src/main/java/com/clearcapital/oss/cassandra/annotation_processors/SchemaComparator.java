@@ -38,15 +38,23 @@ public class SchemaComparator extends SchemaProcessor {
 
     public void compare() throws ClientProtocolException, AssertException, CassandraException,
             CommandExecutionException, IOException {
-    	if (autoSchemaConfig.getKillFirst() && !autoSchemaConfig.getDryRun()) {
-    		log.debug("Killing preexisting schemas");
-    		
+        if (autoSchemaConfig.getKillFirst() && !autoSchemaConfig.getDryRun()) {
+            log.debug("Killing preexisting schemas");
+
             ImmutableMap<String, RingClient> ringClients = manager.getRingClients();
-            for (Entry<String, RingClient> ringClient : ringClients.entrySet()) {
-            	String keyspaceName = ringClient.getValue().getPreferredKeyspaceName();
-            	ringClient.getValue().getSession().dropKeyspace(keyspaceName);
-            }    		
-    	}
+            for (Entry<String, RingClient> entry : ringClients.entrySet()) {
+                RingClient ringClient = entry.getValue();
+                String keyspaceName = ringClient.getPreferredKeyspaceName();
+                KeyspaceMetadata metadata = ringClient.getKeyspaceInfo(keyspaceName);
+                if (metadata != null) {
+                    SessionHelper keyspace = ringClient.getKeyspace(keyspaceName);
+                    for (TableMetadata tableMetadata : metadata.getTables()) {
+                        keyspace.dropTableIfExists(tableMetadata.getName());
+                    }
+                }
+                ringClient.getSession().dropKeyspace(keyspaceName);
+            }
+        }
         ImmutableSet<String> tablesProcessed = compareAnnotatedClasses();
         dropSuperfluousTables(tablesProcessed);
     }
@@ -79,8 +87,7 @@ public class SchemaComparator extends SchemaProcessor {
                         }
                     } else {
                         log.debug("Found superfluous table.  To drop it, run auto-schema --drop-tables '"
-                                + fullTableName
-                                + "'");
+                                + fullTableName + "'");
                     }
                 }
             }
@@ -88,9 +95,8 @@ public class SchemaComparator extends SchemaProcessor {
         }
     }
 
-    private ImmutableSet<String> compareAnnotatedClasses()
-            throws AssertException, CassandraException, CommandExecutionException,
-            ClientProtocolException, IOException {
+    private ImmutableSet<String> compareAnnotatedClasses() throws AssertException, CassandraException,
+            CommandExecutionException, ClientProtocolException, IOException {
         Set<Class<?>> tableClasses = ReflectionHelpers.getTypesAnnotatedWith("/", CassandraTable.class);
 
         // Check to make sure all tables are up to date.

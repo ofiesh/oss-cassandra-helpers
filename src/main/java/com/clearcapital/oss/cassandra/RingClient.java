@@ -7,31 +7,32 @@ import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.Metadata;
 import com.datastax.driver.core.ProtocolVersion;
 
 public class RingClient {
 
     private final RingConfiguration configuration;
-	private final Cluster cluster;
+    private final Cluster cluster;
 
     public RingClient(RingConfiguration configuration) throws AssertException {
         AssertHelpers.notNull(configuration, "configuration");
 
         Cluster.Builder builder = new Cluster.Builder();
         for (String host : configuration.getHosts()) {
-			builder.addContactPoint(host);
-		}
+            builder.addContactPoint(host);
+        }
         if (configuration.getPort() != null) {
             builder.withPort(configuration.getPort());
-		}
+        }
 
         this.configuration = configuration;
         this.cluster = builder.build();
-	}
+    }
 
     public SessionHelper getSession() {
         return new SessionHelper(cluster.connect(), configuration);
-	}
+    }
 
     public SessionHelper getPreferredKeyspace() throws AssertException {
         return getKeyspace(getPreferredKeyspaceName());
@@ -54,19 +55,23 @@ public class RingClient {
 
     public SessionHelper getKeyspace(String keyspaceName) {
         return new SessionHelper(cluster.connect(keyspaceName), configuration);
-	}
+    }
 
-	public KeyspaceMetadata getKeyspaceInfo(String keyspaceName) {
-		return cluster.getMetadata().getKeyspace(keyspaceName);
-	}
+    public KeyspaceMetadata getKeyspaceInfo(String keyspaceName) {
+        Metadata clusterMetadata = cluster.getMetadata();
+        if (clusterMetadata == null) {
+            return null;
+        }
+        return clusterMetadata.getKeyspace(keyspaceName);
+    }
 
-	public boolean keyspaceExists(String keyspaceName) {
-		return null != getKeyspaceInfo(keyspaceName);
-	}
+    public boolean keyspaceExists(String keyspaceName) {
+        return null != getKeyspaceInfo(keyspaceName);
+    }
 
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     public TemporaryKeyspace createTemporaryKeyspace(String keyspacePrefix)
             throws AssertException, CassandraException, InterruptedException {
         while (true) {
@@ -82,21 +87,20 @@ public class RingClient {
         }
     }
 
-	public void dropKeyspace() {
-		// TODO Actually drop the keyspace
-		
-	}
+    public void dropKeyspace(String keyspaceName) {
+        getSession().dropKeyspace(keyspaceName);
+    }
 
-	public void disconnect() {
-		cluster.close();
-	}
+    public void disconnect() {
+        cluster.close();
+    }
 
-	public Cluster getCluster() {
-		return cluster;
-	}
+    public Cluster getCluster() {
+        return cluster;
+    }
 
-	public ProtocolVersion getProtocolVersion() {
-		return getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
-	}
+    public ProtocolVersion getProtocolVersion() {
+        return getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.clearcapital.oss.cassandra.iterate;
 
 import com.clearcapital.oss.cassandra.configuration.WithMultiRingConfiguration;
+import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 
 public interface RecordTransformer {
 
@@ -14,5 +15,5 @@ public interface RecordTransformer {
 	public Long transformRecords(Long startToken, Long endToken) throws Exception;
 
 	public void setConfiguration(WithMultiRingConfiguration configuration) throws Exception;
-
+	public void setMultiRingClientManager(MultiRingClientManager clientManager) throws Exception;
 }

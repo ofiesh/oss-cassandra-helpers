@@ -138,6 +138,10 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.6</version>
         <configuration>
+          <includes>
+            <include>**/*IT.java</include>
+            <include>**/*Test.java</include>
+          </includes>
           <systemPropertyVariables>
             <log4j.configuration>src/test/resources/log4j.properties </log4j.configuration>
           </systemPropertyVariables>

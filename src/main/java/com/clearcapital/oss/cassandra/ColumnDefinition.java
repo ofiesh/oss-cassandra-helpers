@@ -13,7 +13,8 @@ public interface ColumnDefinition {
         NULL,
         STATIC,
         PARTITION_KEY,
-        CLUSTERING_KEY
+        CLUSTERING_KEY_ASC,
+        CLUSTERING_KEY_DESC
     }
 
     /**

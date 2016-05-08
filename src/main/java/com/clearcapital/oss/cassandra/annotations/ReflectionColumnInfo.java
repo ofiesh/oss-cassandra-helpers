@@ -11,4 +11,5 @@ public @interface ReflectionColumnInfo {
     String[] javaPath() default {};
 
     ColumnOption columnOption() default ColumnOption.NULL;
+
 }

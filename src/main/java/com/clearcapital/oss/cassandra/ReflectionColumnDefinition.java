@@ -1,6 +1,10 @@
 package com.clearcapital.oss.cassandra;
 
+import java.util.Collection;
 import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.java.ReflectionHelpers;
@@ -49,12 +53,24 @@ public class ReflectionColumnDefinition implements ColumnDefinition {
 
     public void decode(Object target, Row row, Definition column) throws AssertException, ReflectiveOperationException {
         Object value = CQLHelpers.getColumn(row, column);
+        if (value == null) {
+            return;
+        }
+        if (value instanceof Collection && (CollectionUtils.isEmpty((Collection<?>) value))) {
+            return;
+        }
+        if (value instanceof Map && (MapUtils.isEmpty((Map<?, ?>) value))) {
+            return;
+        }
         ReflectionHelpers.setFieldValue(target, getReflectionPath(), value);
     }
 
     @Override
     public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException {
         Object value = ReflectionHelpers.getFieldValue(object, getReflectionPath());
+        if (value instanceof Enum) {
+            value = value.toString();
+        }
         result.put(getColumnName(), value);
     }
 

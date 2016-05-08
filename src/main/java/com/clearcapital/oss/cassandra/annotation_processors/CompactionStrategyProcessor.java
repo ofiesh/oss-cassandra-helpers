@@ -15,22 +15,29 @@ import com.datastax.driver.core.schemabuilder.TableOptions.CompactionOptions.Siz
 
 public class CompactionStrategyProcessor {
 
-    public static boolean encodeCompactionStrategy(Options result, Compaction compaction) {
+    public static boolean encodeCompactionStrategy(Options output, Compaction compaction) {
+        boolean result = false;
+        
+        if (compaction.compactStorage()) {
+            result = true;
+            output.compactStorage();
+        }
+        
         if (compaction.dateTiered().selected()) {
-            encodeCompactionStrategy(result, compaction.dateTiered());
+            encodeCompactionStrategy(output, compaction.dateTiered());
             return true;
         } else if (compaction.sizeTiered().selected()) {
-            encodeCompactionStrategy(result, compaction.sizeTiered());
+            encodeCompactionStrategy(output, compaction.sizeTiered());
             return true;
         } else if (compaction.leveled().selected()) {
-            encodeCompactionStrategy(result, compaction.leveled());
+            encodeCompactionStrategy(output, compaction.leveled());
             return true;
         }
-        return false;
+        return result;
     }
 
     static void encodeCompactionStrategy(Options result, DateTiered dateTiered) {
-        result.compactStorage();
+        // result.compactStorage();
         DateTieredCompactionStrategyOptions dateTieredStrategy = SchemaBuilder.dateTieredStrategy();
     
         if (dateTiered.baseTimeSeconds() >= 0) {
@@ -74,7 +81,7 @@ public class CompactionStrategyProcessor {
     }
 
     static void encodeCompactionStrategy(Options result, SizeTiered sizeTiered) {
-        result.compactStorage();
+        // result.compactStorage();
         SizeTieredCompactionStrategyOptions sizedTieredStrategy = SchemaBuilder.sizedTieredStategy();
     
         if (sizeTiered.bucketHigh() >= 0) {
@@ -122,7 +129,7 @@ public class CompactionStrategyProcessor {
     }
 
     static void encodeCompactionStrategy(Options result, Leveled leveled) {
-        result.compactStorage();
+        // result.compactStorage();
     
         LeveledCompactionStrategyOptions leveledStrategy = SchemaBuilder.leveledStrategy();
         if (leveled.backgroundEnabled() != TriBoolean.USE_DEFAULT) {
