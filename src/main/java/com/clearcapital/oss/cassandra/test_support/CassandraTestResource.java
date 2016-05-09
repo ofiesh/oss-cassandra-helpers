@@ -57,8 +57,10 @@ public class CassandraTestResource extends ExternalResource {
 
     public void recreateTable(Class<?> tableClass) throws AssertException, CassandraException, ClientProtocolException,
             CommandExecutionException, IOException {
-        while (tableExists(CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup(),
-                CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+        String multiRingGroup = CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup();
+
+        multiRingClientManager.getRingClientForGroup(multiRingGroup).createPreferredKeyspace();
+        while (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
             CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
         }
         CassandraTableProcessor.tableBuilder(new ImmediateCommandExecutor(), multiRingClientManager, tableClass)
