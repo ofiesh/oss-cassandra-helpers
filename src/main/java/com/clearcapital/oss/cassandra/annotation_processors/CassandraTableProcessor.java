@@ -21,9 +21,12 @@ import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
+import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
  * Support for processing {@link CassandraTable} annotated classes.
@@ -156,4 +159,25 @@ public class CassandraTableProcessor {
         }
     }
 
+    public static Iterable<Class<?>> getTableClasses() {
+        return ReflectionHelpers.getTypesAnnotatedWith("/", CassandraTable.class);
+    }
+
+    public static Iterable<Class<?>> getSolrTableClasses() {
+        return getTableClasses(new Predicate<Class<?>>() {
+
+            @Override
+            public boolean apply(Class<?> input) {
+                try {
+                    CassandraTable annotation = getAnnotation(input);
+                    return annotation.solrOptions().enabled(); 
+                } catch (AssertException e) {
+                    return false;
+                }
+            }});
+    }
+
+    public static Iterable<Class<?>> getTableClasses(Predicate<Class<?>> predicate) {
+        return Iterables.filter(getTableClasses(), predicate);
+    }
 }

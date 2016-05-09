@@ -3,7 +3,6 @@ package com.clearcapital.oss.cassandra.annotation_processors;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.http.client.ClientProtocolException;
 import org.slf4j.Logger;
@@ -11,13 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.RingClient;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.configuration.AutoSchemaConfiguration;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.commands.CommandExecutionException;
 import com.clearcapital.oss.executors.CommandExecutor;
-import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.TableMetadata;
@@ -97,7 +94,7 @@ public class SchemaComparator extends SchemaProcessor {
 
     private ImmutableSet<String> compareAnnotatedClasses() throws AssertException, CassandraException,
             CommandExecutionException, ClientProtocolException, IOException {
-        Set<Class<?>> tableClasses = ReflectionHelpers.getTypesAnnotatedWith("/", CassandraTable.class);
+        Iterable<Class<?>> tableClasses = CassandraTableProcessor.getTableClasses();
 
         // Check to make sure all tables are up to date.
         log.debug("Comparing schema for table classes");
