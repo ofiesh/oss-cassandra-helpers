@@ -143,8 +143,8 @@ public class CassandraTableProcessor {
         ImmutableList<ColumnDefinition> list = listBuilder.build();
         ImmutableMap<String, ColumnDefinition> map = mapBuilder.build();
         if (log.isDebugEnabled()) {
-            log.debug("Caching columnDefinitionList:" + list);
-            log.debug("Caching columnMap:" + map);
+            log.trace("Caching columnDefinitionList:" + list);
+            log.trace("Caching columnMap:" + map);
         }
         columnDefinitionLists.put(annotation, list);
         columnDefinitionMaps.put(annotation, map);

@@ -130,20 +130,20 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
 
                 switch (definition.getColumnOption()) {
                     case PARTITION_KEY:
-                        log.debug("Adding partition key column:" + columnName);
+                        log.trace("Adding partition key column:" + columnName);
                         create.addPartitionKey(columnName, definition.getDataType());
                         break;
                     case CLUSTERING_KEY_ASC:
                     case CLUSTERING_KEY_DESC:
-                        log.debug("Adding clustering column:" + columnName);
+                        log.trace("Adding clustering column:" + columnName);
                         create.addClusteringColumn(columnName, definition.getDataType());
                         break;
                     case STATIC:
-                        log.debug("Adding static column:" + columnName);
+                        log.trace("Adding static column:" + columnName);
                         create.addStaticColumn(columnName, definition.getDataType());
                         break;
                     case NULL:
-                        log.debug("Adding column:" + columnName);
+                        log.trace("Adding column:" + columnName);
                         create.addColumn(columnName, definition.getDataType());
                         break;
                 }
