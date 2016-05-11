@@ -114,6 +114,8 @@ public class CassandraTableImpl<TableClass, ModelClass>
                             ((ReflectionColumnDefinition) columnDefinition).decode(result, row, column);
                         } else if (columnDefinition instanceof PlaceholderColumnDefinition) {
                             // ignore
+                        } else if (columnDefinition instanceof ManualColumnDefinition) {
+                            // ignore
                         } else {
                             AssertHelpers.isTrue(false,
                                     "Unexpected ColumnDefinition subclass:" + ColumnDefinition.class.getName());
