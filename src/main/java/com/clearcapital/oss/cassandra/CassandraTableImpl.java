@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Function;
@@ -200,12 +202,12 @@ public class CassandraTableImpl<TableClass, ModelClass>
     }
 
     /**
-     * Read the results of {@code statement} into a collection (ImmutableList). 
+     * Read the results of {@code statement} into a collection (ImmutableList).
      * 
      * <p>
-     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a good
-     * chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in the
-     * {@link CassandraTable#modelClass()}.
+     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
+     * good chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in
+     * the {@link CassandraTable#modelClass()}.
      * </p>
      */
     public Collection<ModelClass> readCollection(Statement statement) throws CassandraException, AssertException {
@@ -279,6 +281,47 @@ public class CassandraTableImpl<TableClass, ModelClass>
             throws AssertException {
         statement.setConsistencyLevel(consistencyLevel);
         return prepareStatement(statement);
+    }
+
+    protected PreparedStatement deleteStatement(ConsistencyLevel consistency) throws AssertException {
+        CassandraTable annotation = getAnnotation();
+        Asserts.notNull(annotation, "tableClass must have @CassandraTable annotation");
+        Map<String, ColumnDefinition> columns = CassandraTableProcessor.getColumnDefinitionMap(annotation);
+        Delete delete = QueryBuilder.delete().from(annotation.tableName());
+        delete.setConsistencyLevel(consistency);
+        for (Entry<String, ColumnDefinition> pk : columns.entrySet()) {
+            // @formatter:off
+            // add a where clause for every column that is a partition or clustering column
+            if  (   pk.getValue() != null 
+                &&  (   ColumnOption.PARTITION_KEY.equals(pk.getValue().getColumnOption())
+                    ||  ColumnOption.CLUSTERING_KEY_ASC.equals(pk.getValue().getColumnOption())
+                    ||  ColumnOption.CLUSTERING_KEY_DESC.equals(pk.getValue().getColumnOption())
+                    )
+                ) {
+                // @formatter:on
+                delete.where(QueryBuilder.eq(pk.getKey(), QueryBuilder.bindMarker()));
+            }
+        }
+        return getRingClient().getPreferredKeyspace().prepare(delete);
+    }
+
+    protected PreparedStatement deleteAllStatement(ConsistencyLevel consistency) throws AssertException {
+        CassandraTable annotation = getAnnotation();
+        Asserts.notNull(annotation, "tableClass must have @CassandraTable annotation");
+        Map<String, ColumnDefinition> columns = CassandraTableProcessor.getColumnDefinitionMap(annotation);
+        Delete delete = QueryBuilder.delete().from(annotation.tableName());
+        delete.setConsistencyLevel(consistency);
+        for (Entry<String, ColumnDefinition> pk : columns.entrySet()) {
+            // @formatter:off
+            // add a where clause for every partition column
+            if  (   pk.getValue() != null 
+                &&  ColumnOption.PARTITION_KEY.equals(pk.getValue().getColumnOption())
+                ) {
+                // @formatter:on
+                delete.where(QueryBuilder.eq(pk.getKey(), QueryBuilder.bindMarker()));
+            }
+        }
+        return getRingClient().getPreferredKeyspace().prepare(delete);
     }
 
     protected Statement updateStatement(final Map<String, Object> fields, final List<String> forcedFields)
