@@ -1,7 +1,8 @@
 package com.clearcapital.oss.cassandra.iterate;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +23,7 @@ public class CassandraTableWalker<E> implements Iterable<E> {
 
     private SessionHelper session;
 
+    private ZonedDateTime start;
     private PreparedStatement readStatement;
     private CassandraRowDeserializer<E> deserializer;
     private String tableName;
@@ -39,12 +41,25 @@ public class CassandraTableWalker<E> implements Iterable<E> {
 
     /**
      * Estimated time of completion, given token range and time which has elapsed since {@code start}.
+     * 
+     * <li><b>NOTE:</b> Calculated in the timezone specified by {@code start}</li>
+     * <li><b>NOTE:</b> This is private on purpose. You probably want {@link #getEta()} instead</li>
+     * @param start - the time at which the operation started.
      */
-    public LocalDateTime getEta(final LocalDateTime start) {
-        Duration elapsed = Duration.between(start, LocalDateTime.now());
+    private ZonedDateTime getEta(final ZonedDateTime start) {
+        Duration elapsed = Duration.between(start, ZonedDateTime.now(start.getZone()));
         long estTotal = (long) (elapsed.toMillis() / (getProgress() / 100.0));
-        LocalDateTime eta = start.plus(estTotal, ChronoUnit.MILLIS);
+        ZonedDateTime eta = start.plus(estTotal, ChronoUnit.MILLIS);
         return eta;
+    }
+
+    /**
+     * Estimated time of completion, given token range and time which has elapsed since {@code this} was constructed.
+     * 
+     * <li><b>NOTE:</b> Time Zone is UTC</li>
+     */
+    public ZonedDateTime getEta() {
+        return getEta(start);
     }
 
     /**
@@ -55,6 +70,13 @@ public class CassandraTableWalker<E> implements Iterable<E> {
         double tokenOffset = (double) getToken() - (double) getStartToken();
         double progress = tokenOffset / rangeSize * 100.0;
         return progress;
+    }
+
+    /**
+     * Token value set by most recently accessed CassandraTableIterator<>. 
+     */
+    public Long getToken() {
+        return token;
     }
 
     @Override
@@ -188,6 +210,7 @@ public class CassandraTableWalker<E> implements Iterable<E> {
         return startToken;
     }
 
+    
     /**
      * NOTE: Used by CassandraTableIterator<E>
      */
@@ -196,7 +219,7 @@ public class CassandraTableWalker<E> implements Iterable<E> {
     }
 
     private CassandraTableWalker() {
-    
+        start = ZonedDateTime.now(ZoneOffset.UTC);
     }
 
     private void buildStatements() {
@@ -226,10 +249,6 @@ public class CassandraTableWalker<E> implements Iterable<E> {
         read.setConsistencyLevel(readConsistencyLevel);
         read.setFetchSize(fetchSize);
         this.readStatement = session.prepare(read);
-    }
-
-    private Long getToken() {
-        return token;
     }
 
     void setToken(long value) {
