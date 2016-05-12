@@ -152,6 +152,14 @@ public class SessionHelper {
         return session.getCluster().getMetadata().getKeyspace(getLoggedKeyspace()).getTable(tableName);
     }
 
+    public URI getSolrResourceUri(String tableName) {
+        UriBuilder uriBuilder = UriBuilder.fromUri(ringConfiguration.getSolrUri());
+        uriBuilder.path("resource");
+        uriBuilder.path("{arg1}.{arg2}");
+        URI uri = uriBuilder.build(getLoggedKeyspace(), tableName);
+        return uri;
+    }
+    
     public URI getSolrResourceUri(String tableName, String destName) {
         UriBuilder uriBuilder = UriBuilder.fromUri(ringConfiguration.getSolrUri());
         uriBuilder.path("resource");

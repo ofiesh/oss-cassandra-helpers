@@ -1,6 +1,7 @@
 package com.clearcapital.oss.cassandra;
 
 import java.lang.reflect.ParameterizedType;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +14,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.collections4.Transformer;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +56,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 /**
  * A helper class for developing table classes
@@ -261,8 +266,18 @@ public class CassandraTableImpl<TableClass, ModelClass>
         // Map<String, CassandraColumnDefinition> additionalColumnsJson =
         // getAdditionalColumnsFromJson(annotation);
 
-        TreeSet<String> columnNames = new TreeSet<>();
-        columnNames.addAll(columns.keySet());
+        TreeSet<String> columnNames = Sets.newTreeSet(// @formatter:off
+            Iterables.transform(
+                Iterables.filter(columns.entrySet(), new Predicate<Entry<String,ColumnDefinition>>(){
+                    @Override
+                    public boolean apply(Entry<String, ColumnDefinition> input) {
+                        return !input.getValue().getIsCreatedElsewhere();
+                    }}), 
+                new Function<Entry<String,ColumnDefinition>,String>() {
+                    @Override
+                    public String apply(Entry<String, ColumnDefinition> input) {
+                        return input.getKey();
+                    }}));// @formatter:on
 
         String[] columnNamesArray = columnNames.toArray(new String[0]);
         Object[] bindMarkers = new Object[columnNames.size()];
@@ -395,4 +410,9 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return CassandraTableWalker.<E> builder().setSession(getSession()).setTableName(getTableName())
                 .setKeyColumnNames(keyColumnNames).setDeserializer(customDeserializer);
     }
+    
+    public URI getSolrQueryUri() throws AssertException {             
+        return getRingClient().getPreferredKeyspace().getSolrResourceUri(getTableName());
+    }
+
 }

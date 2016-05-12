@@ -109,7 +109,7 @@ public class CassandraCommand implements Command {
         } catch (Throwable e) {
             log.error("The following statement caused an exception, built here:" + getLocation() + "\n debugInfo:"
                     + debugInfo + "\n queryText:" + CQLHelpers.getQueryText(statement), e);
-            throw new CommandExecutionException("Could not execute batch statements from bundle, built here:"
+            throw new CommandExecutionException("Could not execute statements from bundle, built here:"
                     + getLocation(), e);
         }
     }
