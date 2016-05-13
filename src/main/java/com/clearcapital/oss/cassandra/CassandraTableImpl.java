@@ -14,9 +14,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.commons.collections4.Transformer;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
