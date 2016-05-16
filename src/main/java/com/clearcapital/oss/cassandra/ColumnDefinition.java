@@ -27,6 +27,11 @@ public interface ColumnDefinition {
      * itself, or by integrations thereof, like DSE/Solr.
      */
     public boolean getIsCreatedElsewhere();
+    
+    /**
+     * If true, this definition should be included when building an insert statement
+     */
+    public boolean getIsIncludedInInsertStatement();
 
     /**
      * Name of the column, from Cassandra's perspective.

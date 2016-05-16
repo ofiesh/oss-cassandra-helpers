@@ -135,4 +135,9 @@ public class ReflectionColumnDefinition implements ColumnDefinition {
         }
     }
 
+    @Override
+    public boolean getIsIncludedInInsertStatement() {
+        return true;
+    }
+
 }

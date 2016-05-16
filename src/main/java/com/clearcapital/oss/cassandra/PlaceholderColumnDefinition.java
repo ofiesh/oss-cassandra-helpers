@@ -78,4 +78,9 @@ public class PlaceholderColumnDefinition implements ColumnDefinition {
         // NO-OP. This column will be populated (maybe?) by whatever force defined it. (e.g., DSE's solr integration?)
     }
 
+    @Override
+    public boolean getIsIncludedInInsertStatement() {
+        return false;
+    }
+
 }

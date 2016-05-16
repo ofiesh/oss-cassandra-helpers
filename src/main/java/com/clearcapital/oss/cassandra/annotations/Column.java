@@ -31,4 +31,5 @@ public @interface Column {
 
     JsonColumnInfo jsonColumnInfo() default @JsonColumnInfo(isSelected = false);
 
+    SolrCopyFieldInfo solrCopyField() default @SolrCopyFieldInfo(isSelected = false);
 }

@@ -14,6 +14,7 @@ import com.clearcapital.oss.cassandra.ManualColumnDefinition;
 import com.clearcapital.oss.cassandra.PlaceholderColumnDefinition;
 import com.clearcapital.oss.cassandra.ReflectionColumnDefinition;
 import com.clearcapital.oss.cassandra.RingClient;
+import com.clearcapital.oss.cassandra.SolrCopyFieldDefinition;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.cassandra.configuration.AutoSchemaConfiguration;
@@ -131,6 +132,10 @@ public class CassandraTableProcessor {
                 mapBuilder.put(jsonColumn.getColumnName().toLowerCase(), jsonColumn);
             } else if (column.manualColumnInfo().isSelected()) {
                 ManualColumnDefinition manualColumn = ManualColumnDefinition.builder().fromAnnotation(column).build();
+                listBuilder.add(manualColumn);
+                mapBuilder.put(manualColumn.getColumnName().toLowerCase(), manualColumn);
+            } else if (column.solrCopyField().isSelected()) {
+                SolrCopyFieldDefinition manualColumn = SolrCopyFieldDefinition.builder().fromAnnotation(column).build();
                 listBuilder.add(manualColumn);
                 mapBuilder.put(manualColumn.getColumnName().toLowerCase(), manualColumn);
             } else if (column.createdElsewhere()) {

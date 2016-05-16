@@ -268,7 +268,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
                 Iterables.filter(columns.entrySet(), new Predicate<Entry<String,ColumnDefinition>>(){
                     @Override
                     public boolean apply(Entry<String, ColumnDefinition> input) {
-                        return !input.getValue().getIsCreatedElsewhere();
+                        return input.getValue().getIsIncludedInInsertStatement();
                     }}), 
                 new Function<Entry<String,ColumnDefinition>,String>() {
                     @Override
