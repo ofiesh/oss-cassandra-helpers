@@ -189,7 +189,7 @@ public class SessionHelper {
     }
 
     public void dropKeyspace(String keyspaceName) {
-        session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName));
+        session.execute(new SimpleStatement("DROP KEYSPACE IF EXISTS " + keyspaceName));
     }
 
     public void truncateTable(String tableName) {

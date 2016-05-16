@@ -67,28 +67,29 @@ public class SchemaComparator extends SchemaProcessor {
         ImmutableMap<String, RingClient> ringClients = manager.getRingClients();
         for (Entry<String, RingClient> ringClient : ringClients.entrySet()) {
             log.debug("Checking to see if ring \"" + ringClient.getKey() + "\" has any superfluous tables.");
-            SessionHelper session = ringClient.getValue().getPreferredKeyspace();
-            KeyspaceMetadata metadata = session.getKeyspaceInfo();
-            Collection<TableMetadata> tableMetadatas = metadata.getTables();
+            if (ringClient.getValue().keyspaceExists(ringClient.getValue().getPreferredKeyspaceName())) {
+                SessionHelper session = ringClient.getValue().getPreferredKeyspace();
+                KeyspaceMetadata metadata = session.getKeyspaceInfo();
+                Collection<TableMetadata> tableMetadatas = metadata.getTables();
 
-            String keyspaceName = metadata.getName();
+                String keyspaceName = metadata.getName();
 
-            for (TableMetadata tableMetadata : tableMetadatas) {
-                String tableName = tableMetadata.getName();
-                String fullTableName = keyspaceName + "." + tableName;
-                if (!tablesProcessed.contains(fullTableName)) {
-                    if (dropTables.contains(fullTableName)) {
-                        log.debug("Dropping superfluous table:" + tableName);
-                        if (!autoSchemaConfig.getDryRun()) {
-                            session.dropTableIfExists(tableName);
+                for (TableMetadata tableMetadata : tableMetadatas) {
+                    String tableName = tableMetadata.getName();
+                    String fullTableName = keyspaceName + "." + tableName;
+                    if (!tablesProcessed.contains(fullTableName)) {
+                        if (dropTables.contains(fullTableName)) {
+                            log.debug("Dropping superfluous table:" + tableName);
+                            if (!autoSchemaConfig.getDryRun()) {
+                                session.dropTableIfExists(tableName);
+                            }
+                        } else {
+                            log.debug("Found superfluous table.  To drop it, run auto-schema --drop-tables '"
+                                    + fullTableName + "'");
                         }
-                    } else {
-                        log.debug("Found superfluous table.  To drop it, run auto-schema --drop-tables '"
-                                + fullTableName + "'");
                     }
                 }
             }
-
         }
     }
 
