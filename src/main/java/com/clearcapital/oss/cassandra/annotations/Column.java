@@ -1,5 +1,7 @@
 package com.clearcapital.oss.cassandra.annotations;
 
+import com.clearcapital.oss.java.patterns.NullClass;
+
 /**
  * <p>
  * Define a column.
@@ -32,4 +34,6 @@ public @interface Column {
     JsonColumnInfo jsonColumnInfo() default @JsonColumnInfo(isSelected = false);
 
     SolrCopyFieldInfo solrCopyField() default @SolrCopyFieldInfo(isSelected = false);
+
+    CodecColumnInfo codecColumnInfo() default @CodecColumnInfo(codecClass = NullClass.class);
 }
