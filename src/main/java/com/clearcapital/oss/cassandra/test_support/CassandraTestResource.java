@@ -90,4 +90,19 @@ public class CassandraTestResource extends ExternalResource {
         return multiRingClientManager.getRingClientForGroup(group).getPreferredKeyspace().getTableMetadata(table);
     }
 
+    public boolean tableExists(Class<?> tableClass) throws AssertException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(tableClass);
+        return tableExists(annotation.multiRingGroup(), annotation.tableName());
+    }
+
+    public void dropTable(Class<?> tableClass) throws AssertException, CassandraException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(tableClass);
+        multiRingClientManager.getRingClientForGroup(annotation.multiRingGroup()).getPreferredKeyspace()
+                .dropTableIfExists(annotation.tableName());
+    }
+
+    public void reloadCoreInPlace(Class<?> tableClass) {
+        // TODO: actually reload the core.
+    }
+
 }

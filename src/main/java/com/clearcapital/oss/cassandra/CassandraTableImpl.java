@@ -219,6 +219,19 @@ public class CassandraTableImpl<TableClass, ModelClass>
     }
 
     /**
+     * Read the results of {@code statement} into a collection (ImmutableList).
+     * 
+     * <p>
+     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
+     * good chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in
+     * the {@link CassandraTable#modelClass()}.
+     * </p>
+     */
+    public <E> Collection<E> readCollection(Statement statement,CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
+        return ImmutableList.<E> copyOf(readIterable(statement, deserializer));
+    }
+    
+    /**
      * Read the results of a statement in an iterable form
      * 
      * @throws AssertException
