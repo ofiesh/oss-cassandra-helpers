@@ -375,7 +375,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return updateStatement(fields, forcedFields);
     }
 
-    protected Command updateCommand(final ModelClass model, final List<String> forcedFields)
+    public Command updateCommand(final ModelClass model, final List<String> forcedFields)
             throws ReflectionPathException, AssertException, SerializingException {
         return CassandraCommand.builder(getSession()).setStatement(updateStatement(model, forcedFields)).build();
     }
