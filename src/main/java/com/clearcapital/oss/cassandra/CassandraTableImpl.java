@@ -14,10 +14,12 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.core.util.exceptions.CoreException;
 import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
@@ -420,9 +422,16 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return CassandraTableWalker.<E> builder().setSession(getSession()).setTableName(getTableName())
                 .setKeyColumnNames(keyColumnNames).setDeserializer(customDeserializer);
     }
-    
+
     public URI getSolrQueryUri() throws AssertException {             
         return getRingClient().getPreferredKeyspace().getSolrResourceUri(getTableName());
+    }
+
+    protected boolean existsAndIsNotNull(Row row, String field) throws AssertException {
+        AssertHelpers.notNull(row, "row may not be null");
+        AssertHelpers.isTrue(StringUtils.isNotBlank(field), "field may not be null");
+        AssertHelpers.notNull(row.getColumnDefinitions(), "row must have column definitions");
+        return row.getColumnDefinitions().contains(field) && !row.isNull(field);
     }
 
 }
