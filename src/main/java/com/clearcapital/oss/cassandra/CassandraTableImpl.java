@@ -19,7 +19,6 @@ import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clearcapital.core.util.exceptions.CoreException;
 import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
