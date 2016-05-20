@@ -266,11 +266,11 @@ public class CassandraTableImpl<TableClass, ModelClass>
     }
 
     protected PreparedStatement prepareInsertStatement(final ConsistencyLevel consistencyLevel) throws AssertException {
-        return prepareInsertStatement(consistencyLevel, null, null);
+        return prepareInsertStatement(consistencyLevel, null, null,false);
     }
 
     protected PreparedStatement prepareInsertStatement(final ConsistencyLevel consistencyLevel, final TimeUnit timeUnit,
-            final Integer ttlDuration) throws AssertException {
+            final Integer ttlDuration, boolean withDynamicTTL) throws AssertException {
         CassandraTable annotation = getAnnotation();
         AssertHelpers.notNull(annotation, "tableClass must have @CassandraTable annotation");
         Map<String, ColumnDefinition> columns = CassandraTableProcessor.getColumnDefinitionMap(annotation);
@@ -295,7 +295,9 @@ public class CassandraTableImpl<TableClass, ModelClass>
         Arrays.fill(bindMarkers, QueryBuilder.bindMarker());
 
         Insert insert = QueryBuilder.insertInto(annotation.tableName()).values(columnNamesArray, bindMarkers);
-        if (TTLHelpers.isValidTTL(timeUnit, ttlDuration)) {
+        if (withDynamicTTL) {
+            insert.using(QueryBuilder.ttl(QueryBuilder.bindMarker()));
+        } else if (TTLHelpers.isValidTTL(timeUnit, ttlDuration)) {
             insert.using(QueryBuilder.ttl(TTLHelpers.getTTL(timeUnit, ttlDuration)));
         }
         insert.setConsistencyLevel(consistencyLevel);
