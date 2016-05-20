@@ -64,17 +64,10 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         }
 
         for (AdditionalIndex additionalIndex : additionalIndexes) {
-            if (additionalIndex.indexMapKeys()) {
-                executor.addCommand(CassandraCommand.builder(getSession())
-                        .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
-                                .andKeysOfColumn(additionalIndex.columnName()))
-                        .build());
-            } else {
-                executor.addCommand(CassandraCommand.builder(getSession())
-                        .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
-                                .andKeysOfColumn(additionalIndex.columnName()))
-                        .build());
-            }
+            executor.addCommand(CassandraCommand.builder(getSession())
+                    .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
+                            .andKeysOfColumn(additionalIndex.columnName()))
+                    .build());
         }
 
         SolrOptions solrOptions = annotation.solrOptions();

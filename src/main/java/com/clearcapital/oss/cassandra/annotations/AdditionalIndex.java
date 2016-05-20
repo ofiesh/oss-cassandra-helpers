@@ -11,11 +11,5 @@ public @interface AdditionalIndex {
     /**
      * Column name to index.
      */
-    String[] columnNames();
-
-    /**
-     * If true, indexes map keys from the map specified in {@link #columnName()}
-     */
-    boolean indexMapKeys() default false;
-
+    String columnName();
 }
