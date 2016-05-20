@@ -478,10 +478,10 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return getRingClient().getPreferredKeyspace().getSolrResourceUri(getTableName());
     }
 
-    protected boolean existsAndIsNotNull(Row row, String field) throws AssertException {
-        AssertHelpers.notNull(row, "row may not be null");
-        AssertHelpers.isTrue(StringUtils.isNotBlank(field), "field may not be null");
-        AssertHelpers.notNull(row.getColumnDefinitions(), "row must have column definitions");
+    protected boolean existsAndIsNotNull(Row row, String field) {
+        UncheckedAssertHelpers.notNull(row, "row may not be null");
+        UncheckedAssertHelpers.isTrue(StringUtils.isNotBlank(field), "field may not be null");
+        UncheckedAssertHelpers.notNull(row.getColumnDefinitions(), "row must have column definitions");
         return row.getColumnDefinitions().contains(field) && !row.isNull(field);
     }
 
