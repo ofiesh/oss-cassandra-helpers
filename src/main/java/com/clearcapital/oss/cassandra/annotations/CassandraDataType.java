@@ -14,7 +14,8 @@ public enum CassandraDataType {
     TIMESTAMP(DataType.timestamp()),
     SET_TEXT(DataType.set(DataType.text())),
     LIST_TEXT(DataType.list(DataType.text())),
-    MAP_TEXTTEXT(DataType.map(DataType.text(), DataType.text()))
+    MAP_TEXTTEXT(DataType.map(DataType.text(), DataType.text())),
+    MAP_TEXTBIGINT(DataType.map(DataType.text(), DataType.bigint()))
     // MAP_TEXTBIGINT("map<text, bigint>"),
     // MAP_TEXTBOOLEAN("map<text, boolean>"),
     // MAP_TEXTDOUBLE("map<text, double>"),

@@ -299,7 +299,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return resultSet.isExhausted();
     }    
 
-    protected Map<String, Object> getFields(final Object object)
+    protected Map<String, Object> getFields(final ModelClass object)
             throws AssertException, ReflectionPathException, SerializingException {
         AssertHelpers.notNull(getTableClass(), "tableClass");
         AssertHelpers.notNull(object, "object");
