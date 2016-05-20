@@ -26,6 +26,7 @@ import com.clearcapital.oss.cassandra.annotations.ReflectionColumnInfo;
 import com.clearcapital.oss.cassandra.bundles.CassandraCommand;
 import com.clearcapital.oss.cassandra.exceptions.CassandraDeserializationException;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
+import com.clearcapital.oss.cassandra.iterate.CassandraResultSetFilteredIterator;
 import com.clearcapital.oss.cassandra.iterate.CassandraResultSetIterator;
 import com.clearcapital.oss.cassandra.iterate.CassandraRowDeserializer;
 import com.clearcapital.oss.cassandra.iterate.CassandraTableWalker;
@@ -228,10 +229,36 @@ public class CassandraTableImpl<TableClass, ModelClass>
      * the {@link CassandraTable#modelClass()}.
      * </p>
      */
-    public <E> Collection<E> readCollection(Statement statement,CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
+    public <E> Collection<E> readCollection(Statement statement, CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
         return ImmutableList.<E> copyOf(readIterable(statement, deserializer));
     }
     
+    /**
+     * Read the results of {@code statement} into a collection (ImmutableList).
+     * 
+     * <p>
+     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
+     * good chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in
+     * the {@link CassandraTable#modelClass()}.
+     * </p>
+     */
+    public Collection<ModelClass> readFilteredCollection(Statement statement, Predicate<Row> predicate) throws CassandraException, AssertException {
+        return ImmutableList.<ModelClass> copyOf(readFilteredIterable(statement, predicate, this));
+    }
+
+    /**
+     * Read the results of {@code statement} into a collection (ImmutableList), after filtering the rows using {@code predicate}.
+     * 
+     * <p>
+     * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
+     * good chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in
+     * the {@link CassandraTable#modelClass()}.
+     * </p>
+     */
+    public <E> Collection<E> readFilteredCollection(Statement statement, Predicate<Row> predicate, CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
+        return ImmutableList.<E> copyOf(readFilteredIterable(statement, predicate, deserializer));
+    }
+
     /**
      * Read the results of a statement in an iterable form
      * 
@@ -248,6 +275,29 @@ public class CassandraTableImpl<TableClass, ModelClass>
 
         return new CassandraResultSetIterator<E>(resultSet, deserializer);
     }
+    
+    /**
+     * Read the results of a statement in an iterable form
+     * 
+     * @throws AssertException
+     * @throws CassandraException
+     */
+    public Iterable<ModelClass> readFilteredIterable(Statement statement, Predicate<Row> predicate) throws CassandraException, AssertException {
+        return readFilteredIterable(statement, predicate, this);
+    }
+
+    public <E> Iterable<E> readFilteredIterable(Statement statement, Predicate<Row> predicate, CassandraRowDeserializer<E> deserializer)
+            throws CassandraException, AssertException {
+        ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
+
+        return new CassandraResultSetFilteredIterator<E>(resultSet, predicate, deserializer);
+    }
+
+    public boolean isExhausted(Statement statement)
+            throws CassandraException, AssertException {
+        ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
+        return resultSet.isExhausted();
+    }    
 
     protected Map<String, Object> getFields(final Object object)
             throws AssertException, ReflectionPathException, SerializingException {
