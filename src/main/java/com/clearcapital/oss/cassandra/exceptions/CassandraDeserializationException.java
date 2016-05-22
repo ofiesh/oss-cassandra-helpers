@@ -1,6 +1,8 @@
 package com.clearcapital.oss.cassandra.exceptions;
 
-public class CassandraDeserializationException extends CassandraException {
+import com.clearcapital.oss.java.exceptions.DeserializingException;
+
+public class CassandraDeserializationException extends DeserializingException {
 
 	private static final long serialVersionUID = 9098851226634344144L;
 

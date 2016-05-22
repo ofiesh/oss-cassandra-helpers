@@ -1,6 +1,6 @@
 package com.clearcapital.oss.cassandra.iterate;
 
-import com.clearcapital.oss.cassandra.exceptions.CassandraDeserializationException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.datastax.driver.core.Row;
 
 public class CassandraRowDeserializeToRow implements CassandraRowDeserializer<Row> {
@@ -12,7 +12,7 @@ public class CassandraRowDeserializeToRow implements CassandraRowDeserializer<Ro
     }
 
     @Override
-    public Row deserializeRow(Row row) throws CassandraDeserializationException {
+    public Row deserializeRow(Row row) throws DeserializingException {
         return row;
     }
 

@@ -15,9 +15,10 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.util.Asserts;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.SolrDocument;
 
 import com.clearcapital.oss.cassandra.ColumnDefinition.ColumnOption;
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
@@ -42,6 +43,7 @@ import com.clearcapital.oss.java.exceptions.ReflectionPathException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
@@ -68,17 +70,17 @@ import com.google.common.collect.Sets;
 public class CassandraTableImpl<TableClass, ModelClass>
         implements WalkerGenerator, CassandraRowDeserializer<ModelClass> {
 
-    private static Logger log = LoggerFactory.getLogger(CassandraTableImpl.class);
-
     private final MultiRingClientManager multiRingClientManager;
+
+    protected Map<String, ColumnDefinition> columnDefinitionMap;
 
     public CassandraTableImpl(MultiRingClientManager multiRingClientManager) {
         this.multiRingClientManager = multiRingClientManager;
     }
 
-    public ModelClass deserializeRow(Row row) throws CassandraDeserializationException {
+    public ModelClass deserializeRow(Row row) throws DeserializingException {
         if (row == null) {
-            return null;
+            throw new DeserializingException("provided row is null.");
         }
         try {
             CassandraTable annotation = getAnnotation();
@@ -127,12 +129,11 @@ public class CassandraTableImpl<TableClass, ModelClass>
                     }
 
                 } catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
-                    log.trace("Could not deserialize column:" + column.getName(), e);
-                    // Useful for debugging... throw new RuntimeException(e);
+                    throw new DeserializingException("Could not deserialize column:" + column.getName(), e);
                 }
             }
             return result;
-        } catch (AssertException | ReflectiveOperationException | DeserializingException e) {
+        } catch (AssertException | ReflectiveOperationException e) {
             throw new CassandraDeserializationException(e);
         }
     }
@@ -485,4 +486,172 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return row.getColumnDefinitions().contains(field) && !row.isNull(field);
     }
 
+    public void addField(Map<String, Object> fields, final String columnName, final Boolean value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.cboolean().equals(dataType)) {
+            fields.put(columnName, value);
+        } else {
+            throw new IllegalArgumentException("Cannot assign Boolean value to non-Boolean Cassandra column type.");
+        }
+    }
+
+    public void addField(Map<String, Object> fields, final String columnName, final Double value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.cdouble().equals(dataType)) {
+            fields.put(columnName, value);
+        } else {
+            throw new IllegalArgumentException("Cannot assign Double value to non-Double Cassandra column type.");
+        }
+    }
+
+    public void addField(Map<String, Object> fields, final String columnName, int value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.cint().equals(dataType)) {
+            fields.put(columnName, value);
+        } else {
+            throw new IllegalArgumentException("Cannot assign int value to non-Int Cassandra column type.");
+        }
+    }
+
+    public void addField(Map<String, Object> fields, final String columnName, final Integer value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.cint().equals(dataType)) {
+            fields.put(columnName, value);
+        } else {
+            throw new IllegalArgumentException("Cannot assign Integer value to non-Int Cassandra column type.");
+        }
+    }
+
+    public void addField(Map<String, Object> fields, final String columnName, final Long value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.bigint().equals(dataType) || DataType.cdouble().equals(dataType)) {
+            fields.put(columnName, value);
+        } else {
+            throw new IllegalArgumentException("Cannot assign Long value to non-Bigint/Double Cassandra column type.");
+        }
+    }
+
+    public void addField(Map<String, Object> fields, final String columnName, final String value) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+        if (DataType.cdouble().equals(dataType)) {
+            fields.put(columnDefinition.getColumnName(), NumberUtils.createDouble(value));
+        } else if (DataType.cint().equals(dataType)) {
+            fields.put(columnDefinition.getColumnName(), NumberUtils.createInteger(value));
+        } else if (DataType.text().equals(dataType)) {
+            fields.put(columnDefinition.getColumnName(), value);
+        } else {
+            throw new IllegalArgumentException(
+                    "Cannot assign String value to non-Double/Int/Text Cassandra column type.");
+        }
+    }
+
+    public <T> void addField(Map<String, Object> fields, final String columnName, final Map<String, T> value, final Class<T> mapType) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+    
+        if (mapType.equals(Boolean.class)) {
+            if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Boolean> Cassandra column type.");
+            }
+        }
+    
+        if (mapType.equals(Double.class)) {
+            if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Double> Cassandra column type.");
+            }
+        }
+    
+        if (mapType.equals(String.class)) {
+            if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Text> Cassandra column type.");
+            }
+        }
+    }
+
+    public <T> void addField(Map<String, Object> fields, final String columnName, final Set<T> value, final Class<T> mapType) {
+        ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
+        DataType dataType = columnDefinition.getDataType();
+    
+        if (mapType.equals(Boolean.class)) {
+            if (DataType.set(DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Boolean> Cassandra column type.");
+            }
+        }
+    
+        if (mapType.equals(Double.class)) {
+            if (DataType.set(DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Double> Cassandra column type.");
+            }
+        }
+    
+        if (mapType.equals(String.class)) {
+            if (DataType.set(DataType.cboolean()).equals(dataType)) {
+                fields.put(columnName, value);
+            } else {
+                throw new IllegalArgumentException(
+                        "Cannot assign int value to non-Map<Text, Text> Cassandra column type.");
+            }
+        }
+    }
+
+    public static Boolean existsAndIsNotNull(final SolrDocument doc, final String field) {
+        if (doc !=null && doc.containsKey(field)) {
+            Object obj = doc.get(field);
+            return (obj != null);
+        }
+        return false;
+    }
+
+    public static String getGeolocationString(final Double latitude, final Double longitude) {
+        if (latitude == null || longitude == null) {
+            return null;
+        }
+        return "" + latitude + "," + longitude;
+    }
+
+    public static void addRangeQueryFilter(final SolrQuery query, final String fieldName, final Object[] range) {
+        if (range != null && (range[0] != null || range[1] != null)) {
+            String lowerBound = range[0] != null ? range[0].toString() : "*";
+            String upperBound = range[1] != null ? range[1].toString() : "*";
+            query.addFilterQuery(fieldName + ":[" + lowerBound + " TO " + upperBound + "]");
+        }
+    }
+
+    public static void addRangeQueryFilter(final SolrQuery query, final String fieldName, final Object[] range,
+            final boolean includeNulls) {
+        if (includeNulls) {
+            if (range != null && (range[0] != null || range[1] != null)) {
+                String lowerBound = range[0] != null ? range[0].toString() : "*";
+                String upperBound = range[1] != null ? range[1].toString() : "*";
+                query.addFilterQuery("(-" + fieldName + ":[* TO *] AND *:*) OR " + fieldName + ":[" + lowerBound
+                        + " TO " + upperBound + "]");
+                // query.addFilterQuery("(-" + fieldName + ":[* TO *]) OR " + fieldName + ":[" + lowerBound + " TO "
+                // + upperBound + "]");
+            }
+        } else {
+            addRangeQueryFilter(query, fieldName, range);
+        }
+    }
+    
 }
