@@ -98,6 +98,8 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
 
             SolrOptionsProcessor.coreCreator(executor, manager, tableClass).setMultiRingGroup(multiRingGroup)
                     .setTableName(tableName).create();
+
+            executor.addCommand(new SolrCoreWaiter(manager,tableClass,solrOptions.coreCreationTimeoutMs()));
         }
     }
 

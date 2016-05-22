@@ -101,7 +101,7 @@ public class SessionHelper {
     }
 
     public ResultSetFuture executeAsync(final Statement statement) throws CassandraException {
-        return executeAsync(statement);
+        return getSession().executeAsync(statement);
     }
 
     public KeyspaceMetadata getKeyspaceInfo() {

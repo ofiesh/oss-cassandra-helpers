@@ -230,10 +230,11 @@ public class CassandraTableImpl<TableClass, ModelClass>
      * the {@link CassandraTable#modelClass()}.
      * </p>
      */
-    public <E> Collection<E> readCollection(Statement statement, CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
+    public <E> Collection<E> readCollection(Statement statement, CassandraRowDeserializer<E> deserializer)
+            throws CassandraException, AssertException {
         return ImmutableList.<E> copyOf(readIterable(statement, deserializer));
     }
-    
+
     /**
      * Read the results of {@code statement} into a collection (ImmutableList).
      * 
@@ -243,12 +244,14 @@ public class CassandraTableImpl<TableClass, ModelClass>
      * the {@link CassandraTable#modelClass()}.
      * </p>
      */
-    public Collection<ModelClass> readFilteredCollection(Statement statement, Predicate<Row> predicate) throws CassandraException, AssertException {
+    public Collection<ModelClass> readFilteredCollection(Statement statement, Predicate<Row> predicate)
+            throws CassandraException, AssertException {
         return ImmutableList.<ModelClass> copyOf(readFilteredIterable(statement, predicate, this));
     }
 
     /**
-     * Read the results of {@code statement} into a collection (ImmutableList), after filtering the rows using {@code predicate}.
+     * Read the results of {@code statement} into a collection (ImmutableList), after filtering the rows using
+     * {@code predicate}.
      * 
      * <p>
      * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
@@ -256,7 +259,8 @@ public class CassandraTableImpl<TableClass, ModelClass>
      * the {@link CassandraTable#modelClass()}.
      * </p>
      */
-    public <E> Collection<E> readFilteredCollection(Statement statement, Predicate<Row> predicate, CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
+    public <E> Collection<E> readFilteredCollection(Statement statement, Predicate<Row> predicate,
+            CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
         return ImmutableList.<E> copyOf(readFilteredIterable(statement, predicate, deserializer));
     }
 
@@ -276,29 +280,29 @@ public class CassandraTableImpl<TableClass, ModelClass>
 
         return new CassandraResultSetIterator<E>(resultSet, deserializer);
     }
-    
+
     /**
      * Read the results of a statement in an iterable form
      * 
      * @throws AssertException
      * @throws CassandraException
      */
-    public Iterable<ModelClass> readFilteredIterable(Statement statement, Predicate<Row> predicate) throws CassandraException, AssertException {
+    public Iterable<ModelClass> readFilteredIterable(Statement statement, Predicate<Row> predicate)
+            throws CassandraException, AssertException {
         return readFilteredIterable(statement, predicate, this);
     }
 
-    public <E> Iterable<E> readFilteredIterable(Statement statement, Predicate<Row> predicate, CassandraRowDeserializer<E> deserializer)
-            throws CassandraException, AssertException {
+    public <E> Iterable<E> readFilteredIterable(Statement statement, Predicate<Row> predicate,
+            CassandraRowDeserializer<E> deserializer) throws CassandraException, AssertException {
         ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
 
         return new CassandraResultSetFilteredIterator<E>(resultSet, predicate, deserializer);
     }
 
-    public boolean isExhausted(Statement statement)
-            throws CassandraException, AssertException {
+    public boolean isExhausted(Statement statement) throws CassandraException, AssertException {
         ResultSet resultSet = getRingClient().getPreferredKeyspace().execute(statement);
         return resultSet.isExhausted();
-    }    
+    }
 
     protected Map<String, Object> getFields(final ModelClass object)
             throws AssertException, ReflectionPathException, SerializingException {
@@ -317,7 +321,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
     }
 
     protected PreparedStatement prepareInsertStatement(final ConsistencyLevel consistencyLevel) throws AssertException {
-        return prepareInsertStatement(consistencyLevel, null, null,false);
+        return prepareInsertStatement(consistencyLevel, null, null, false);
     }
 
     protected PreparedStatement prepareInsertStatement(final ConsistencyLevel consistencyLevel, final TimeUnit timeUnit,
@@ -475,15 +479,21 @@ public class CassandraTableImpl<TableClass, ModelClass>
                 .setKeyColumnNames(keyColumnNames).setDeserializer(customDeserializer);
     }
 
-    public URI getSolrQueryUri() throws AssertException {             
+    public URI getSolrQueryUri() throws AssertException {
         return getRingClient().getPreferredKeyspace().getSolrResourceUri(getTableName());
     }
 
-    protected boolean existsAndIsNotNull(Row row, String field) {
+    protected boolean existsAndIsNotNull(Row row, String fieldName) {
         UncheckedAssertHelpers.notNull(row, "row may not be null");
-        UncheckedAssertHelpers.isTrue(StringUtils.isNotBlank(field), "field may not be null");
+        UncheckedAssertHelpers.isTrue(StringUtils.isNotBlank(fieldName), "fieldName may not be null");
         UncheckedAssertHelpers.notNull(row.getColumnDefinitions(), "row must have column definitions");
-        return row.getColumnDefinitions().contains(field) && !row.isNull(field);
+        return row.getColumnDefinitions().contains(fieldName) && !row.isNull(fieldName);
+    }
+
+    protected boolean existsAndIsNotNull(SolrDocument doc, String fieldName) {
+        UncheckedAssertHelpers.notNull(doc, "doc may not be null");
+        UncheckedAssertHelpers.isTrue(StringUtils.isNotBlank(fieldName), "field may not be null");
+        return doc.containsKey(fieldName) && (doc.get(fieldName) != null);
     }
 
     public void addField(Map<String, Object> fields, final String columnName, final Boolean value) {
@@ -613,14 +623,6 @@ public class CassandraTableImpl<TableClass, ModelClass>
                         "Cannot assign int value to non-Map<Text, Text> Cassandra column type.");
             }
         }
-    }
-
-    public static Boolean existsAndIsNotNull(final SolrDocument doc, final String field) {
-        if (doc !=null && doc.containsKey(field)) {
-            Object obj = doc.get(field);
-            return (obj != null);
-        }
-        return false;
     }
 
     public static String getGeolocationString(final Double latitude, final Double longitude) {
