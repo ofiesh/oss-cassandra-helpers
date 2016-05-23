@@ -66,7 +66,7 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         for (AdditionalIndex additionalIndex : additionalIndexes) {
             executor.addCommand(CassandraCommand.builder(getSession())
                     .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
-                            .andKeysOfColumn(additionalIndex.columnName()))
+                            .andColumn(additionalIndex.columnName()))
                     .build());
         }
 
