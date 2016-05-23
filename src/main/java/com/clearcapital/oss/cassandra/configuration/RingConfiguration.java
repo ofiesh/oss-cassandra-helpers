@@ -1,5 +1,6 @@
 package com.clearcapital.oss.cassandra.configuration;
 
+import com.clearcapital.oss.cassandra.AddressTranslatorEnum;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -25,6 +26,15 @@ public class RingConfiguration {
     @JsonProperty
     private String solrUri;
 
+    @JsonProperty
+    private LoadBalancingPolicyConfiguration loadBalancingPolicyConfiguration;
+
+    @JsonProperty
+    private AddressTranslatorEnum addressTranslator;
+
+    @JsonProperty
+    private SecurityConfiguration securityConfiguration;
+
     @Override
     public int hashCode() {
         return Objects.hashCode(this, hosts, port, preferredKeyspace, solrUri);
@@ -35,7 +45,10 @@ public class RingConfiguration {
         if (obj instanceof RingConfiguration) {
             RingConfiguration that = (RingConfiguration) obj;
             return Objects.equal(hosts, that.hosts) && Objects.equal(port, that.port)
-                    && Objects.equal(preferredKeyspace, that.preferredKeyspace) && Objects.equal(solrUri, that.solrUri);
+                    && Objects.equal(preferredKeyspace, that.preferredKeyspace) && Objects.equal(solrUri, that.solrUri)
+                    && Objects.equal(loadBalancingPolicyConfiguration, that.loadBalancingPolicyConfiguration)
+                    && Objects.equal(addressTranslator, that.addressTranslator)
+                    && Objects.equal(securityConfiguration, that.securityConfiguration);
         }
         return false;
     }
@@ -43,7 +56,10 @@ public class RingConfiguration {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).add("hosts", hosts).add("port", port)
-                .add("preferredKeyspace", preferredKeyspace).add("solrUri", solrUri).toString();
+                .add("preferredKeyspace", preferredKeyspace).add("solrUri", solrUri)
+                .add("loadBalancingPolicyConfiguration", loadBalancingPolicyConfiguration)
+                .add("addressTranslator", addressTranslator).add("securityConfiguration", securityConfiguration)
+                .toString();
     }
 
     public ImmutableList<String> getHosts() {
@@ -60,6 +76,18 @@ public class RingConfiguration {
 
     public String getSolrUri() {
         return solrUri;
+    }
+
+    public LoadBalancingPolicyConfiguration getLoadBalancingPolicyConfiguration() {
+        return loadBalancingPolicyConfiguration;
+    }
+
+    public AddressTranslatorEnum getAddressTranslatorEnum() {
+        return addressTranslator;
+    }
+
+    public SecurityConfiguration getSecurityConfiguration() {
+        return securityConfiguration;
     }
 
     public static Builder builder() {
@@ -95,6 +123,22 @@ public class RingConfiguration {
 
         public Builder setSolrUri(String solrUri) {
             result.solrUri = solrUri;
+            return this;
+        }
+
+        public Builder setLoadBalancingPolicyConfiguration(
+                LoadBalancingPolicyConfiguration loadBalancingPolicyConfiguration) {
+            result.loadBalancingPolicyConfiguration = loadBalancingPolicyConfiguration;
+            return this;
+        }
+
+        public Builder setAddressTranslator(AddressTranslatorEnum addressTranslator) {
+            result.addressTranslator = addressTranslator;
+            return this;
+        }
+
+        public Builder setSecurityConfiguration(SecurityConfiguration securityConfiguration) {
+            result.securityConfiguration = securityConfiguration;
             return this;
         }
     }

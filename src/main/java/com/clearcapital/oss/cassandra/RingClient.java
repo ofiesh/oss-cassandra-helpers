@@ -1,17 +1,32 @@
 package com.clearcapital.oss.cassandra;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+
+import com.clearcapital.oss.cassandra.configuration.LoadBalancingPolicyConfiguration;
 import com.clearcapital.oss.cassandra.configuration.RingConfiguration;
+import com.clearcapital.oss.cassandra.configuration.SecurityConfiguration;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
+import com.clearcapital.oss.cassandra.policies.LoadBalancingPolicyEnum;
 import com.clearcapital.oss.cassandra.test_support.CassandraTestResource;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.JdkSSLOptions;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.NettySSLOptions;
 import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.SSLOptions;
+import com.datastax.driver.core.policies.LoadBalancingPolicy;
 
 public class RingClient {
 
+    private final SSLContextFactory sslContextFactory = new SSLContextFactory();
     private final RingConfiguration configuration;
     private final Cluster cluster;
 
@@ -24,6 +39,43 @@ public class RingClient {
         }
         if (configuration.getPort() != null) {
             builder.withPort(configuration.getPort());
+        }
+        if (configuration.getAddressTranslatorEnum() != null) {
+            builder.withAddressTranslator(configuration.getAddressTranslatorEnum().getAddressTranslator());
+        }
+
+        LoadBalancingPolicyConfiguration loadBalancingPolicyConfiguration =
+                configuration.getLoadBalancingPolicyConfiguration();
+        if (loadBalancingPolicyConfiguration == null && !CollectionUtils.isNotEmpty(
+                loadBalancingPolicyConfiguration.getLoadBalancingPolicies())) {
+
+            LoadBalancingPolicy loadBalancingPolicy = null;
+            for (LoadBalancingPolicyEnum loadBalancingPolicyEnum : loadBalancingPolicyConfiguration
+                    .getLoadBalancingPolicies()) {
+                loadBalancingPolicy = loadBalancingPolicyEnum.getLoadBalancingPolicy(loadBalancingPolicy,
+                        configuration.getLoadBalancingPolicyConfiguration());
+            }
+            if(loadBalancingPolicy != null) {
+                builder.withLoadBalancingPolicy(loadBalancingPolicy);
+            }
+        }
+
+        SecurityConfiguration securityConfiguration = configuration.getSecurityConfiguration();
+        if (securityConfiguration != null) {
+            if( StringUtils.isNotEmpty(securityConfiguration.getUsername()) && StringUtils.isNotEmpty(
+                    securityConfiguration.getPassword())) {
+                builder.withCredentials(securityConfiguration.getUsername(), securityConfiguration.getPassword());
+            }
+
+            if(securityConfiguration.isEnableEncryption()) {
+                final SSLContext sslContext = sslContextFactory.createSSLContext(securityConfiguration);
+
+                if (sslContext != null) {
+                    SSLOptions sslOptions = JdkSSLOptions.builder().withSSLContext(sslContext)
+                            .withCipherSuites(securityConfiguration.getCypherSuites()).build();
+                    builder.withSSL(sslOptions);
+                }
+            }
         }
 
         this.configuration = configuration;

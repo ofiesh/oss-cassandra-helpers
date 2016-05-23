@@ -1,0 +1,12 @@
+addressTranslator: EC2MultiRegionAddressTranslator
+
+securityConfiguration:
+  cypherSuites:
+    - foo
+    - bar
+
+loadBalancingPolicyConfiguration:
+  loadBalancingPolicies:
+    - DCAwareRoundRobinPolicy
+
+  localDataCenterName: west
