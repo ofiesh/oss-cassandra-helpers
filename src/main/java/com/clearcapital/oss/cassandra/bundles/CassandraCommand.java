@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.commands.Command;
+import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.commands.CommandExecutionException;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
@@ -19,7 +19,7 @@ import com.datastax.driver.core.Statement;
 /**
  * CassandraCommand can be used in conjunction with {@link CommandExecutor} to queue writes up for later execution.
  */
-public class CassandraCommand implements Command {
+public class CassandraCommand implements DebuggableCommand {
 
     private static Logger log = LoggerFactory.getLogger(CassandraCommand.class);
 

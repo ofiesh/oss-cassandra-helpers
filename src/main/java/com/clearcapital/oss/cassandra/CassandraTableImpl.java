@@ -33,7 +33,7 @@ import com.clearcapital.oss.cassandra.iterate.CassandraRowDeserializer;
 import com.clearcapital.oss.cassandra.iterate.CassandraTableWalker;
 import com.clearcapital.oss.cassandra.iterate.WalkerGenerator;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
-import com.clearcapital.oss.commands.Command;
+import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.UncheckedAssertHelpers;
@@ -435,7 +435,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return updateStatement(fields, forcedFields);
     }
 
-    public Command updateCommand(final ModelClass model, final List<String> forcedFields)
+    public DebuggableCommand updateCommand(final ModelClass model, final List<String> forcedFields)
             throws ReflectionPathException, AssertException, SerializingException {
         return CassandraCommand.builder(getSession()).setStatement(updateStatement(model, forcedFields)).build();
     }

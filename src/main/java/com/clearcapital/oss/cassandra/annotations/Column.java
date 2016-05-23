@@ -1,7 +1,5 @@
 package com.clearcapital.oss.cassandra.annotations;
 
-import com.datastax.driver.core.DataType;
-
 /**
  * <p>
  * Define a column.
