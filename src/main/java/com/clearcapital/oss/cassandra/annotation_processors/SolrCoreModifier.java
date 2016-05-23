@@ -23,7 +23,7 @@ public class SolrCoreModifier extends TableProcessor<SolrCoreModifier> {
     private static String RELOAD = "RELOAD";
     private static String UNLOAD = "UNLOAD";
 
-    SolrCoreModifier(CommandExecutor executor, MultiRingClientManager manager, Class<?> tableClass)
+    public SolrCoreModifier(CommandExecutor executor, MultiRingClientManager manager, Class<?> tableClass)
             throws AssertException {
         super(executor, manager, tableClass);
         setSelf(this);

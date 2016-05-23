@@ -10,7 +10,9 @@ import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.oss.cassandra.RingClient;
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
+import com.clearcapital.oss.cassandra.annotation_processors.SolrCoreModifier;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
@@ -101,8 +103,9 @@ public class CassandraTestResource extends ExternalResource {
                 .dropTableIfExists(annotation.tableName());
     }
 
-    public void reloadCoreInPlace(Class<?> tableClass) {
-        // TODO: actually reload the core.
+    public void reloadCoreInPlace(Class<?> tableClass) throws AssertException, CommandExecutionException, CassandraException {
+        ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
+        new SolrCoreModifier(executor, multiRingClientManager, tableClass).reloadInPlace();
     }
 
 }
