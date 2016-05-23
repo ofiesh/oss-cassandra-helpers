@@ -4,7 +4,9 @@ import java.net.URI;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.http.client.methods.HttpGet;
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,7 @@ public class SolrCoreModifier extends TableProcessor<SolrCoreModifier> {
     }
 
     public void create() throws CommandExecutionException, AssertException, CassandraException {
-        action(CREATE);
+        action(CREATE,null);
     }
 
     public void reloadDontReindex() throws CommandExecutionException, AssertException, CassandraException {
@@ -46,7 +48,9 @@ public class SolrCoreModifier extends TableProcessor<SolrCoreModifier> {
     }
 
     public void unload() throws CommandExecutionException, AssertException, CassandraException {
-        action(UNLOAD);
+        Map<String, String> queryParams = new TreeMap<String, String>();
+        queryParams.put("deleteAll", "true");
+        action(UNLOAD,null);
     }
 
     private void reload(boolean reindex, boolean deleteAllData)
@@ -54,16 +58,23 @@ public class SolrCoreModifier extends TableProcessor<SolrCoreModifier> {
         Map<String, String> queryParams = new TreeMap<String, String>();
         queryParams.put("reindex", reindex ? "true" : "false");
         queryParams.put("deleteAll", deleteAllData ? "true" : "false");
-        action(RELOAD);
+        action(RELOAD,queryParams);
     }
 
-    private void action(String action) throws CommandExecutionException, AssertException, CassandraException {
+    private void action(String action,Map<String,String> parameters) throws CommandExecutionException, AssertException, CassandraException {
         URI uri = getSession().getSolrCoreAdminUri(tableName, action, null);
         log.info("url: " + uri.toASCIIString());
 
-        HttpGet httpGet = new HttpGet(uri);
+        UriBuilder builder = UriBuilder.fromUri(uri);
+        if (parameters != null && !parameters.isEmpty()) {
+        for (Map.Entry<String, String> param : parameters.entrySet()) {
+            builder.queryParam(param.getKey(), param.getValue());
+        }
+        }
+        //HttpGet httpGet = new HttpGet(builder.build());
+        HttpPost httpPost = new HttpPost(builder.build());
 
-        HttpCommand command = HttpCommand.builder().setRequest(httpGet).build();
+        HttpCommand command = HttpCommand.builder().setRequest(httpPost).build();
         executor.addCommand(command);
     }
 

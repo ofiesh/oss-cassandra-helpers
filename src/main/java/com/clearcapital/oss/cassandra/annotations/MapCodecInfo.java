@@ -12,4 +12,10 @@ public @interface MapCodecInfo {
 
     String[] reflectionPath() default {};
 
+    /**
+     * If true, the codec will decode an empty map as "null" rather than as an empty map.
+     * @return
+     */
+    boolean nullifyEmptyMap() default false;
+
 }

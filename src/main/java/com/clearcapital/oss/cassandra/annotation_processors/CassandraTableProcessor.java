@@ -168,6 +168,14 @@ public class CassandraTableProcessor {
         RingClient client = clientManager.getRingClientForGroup(annotation.multiRingGroup());
         if (client.keyspaceExists(client.getPreferredKeyspaceName())) {
             client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
+            if (annotation.solrOptions().enabled()) {
+                try {
+                    // TODO: figure out a way to detect if the core has been dropped.
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new AssertException(e);
+                }
+            }
         }
     }
 

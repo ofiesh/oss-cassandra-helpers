@@ -20,6 +20,7 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraCodec {
     private Class<?> keyType;
     private Collection<String> reflectionPath;
     private String cassandraColumnName;
+    private boolean nullifyEmptyMap;
 
     public MapCodec() {
     }
@@ -30,6 +31,7 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraCodec {
         this.reflectionPath = Arrays.asList(annotation.codecColumnInfo().mapCodec().reflectionPath());
         this.prefix = annotation.codecColumnInfo().mapCodec().prefixString();
         this.keyType = annotation.codecColumnInfo().mapCodec().keyClass();
+        this.nullifyEmptyMap = annotation.codecColumnInfo().mapCodec().nullifyEmptyMap();
     }
 
     @Override
@@ -58,6 +60,9 @@ public class MapCodec<KEY_TYPE, VALUE_TYPE> implements CassandraCodec {
             @SuppressWarnings("unchecked")
             Map<String, VALUE_TYPE> encodedMap = (Map<String, VALUE_TYPE>) fieldValue;
             Map<KEY_TYPE, VALUE_TYPE> decodedMap = decode(encodedMap, prefix, keyType);
+            if (nullifyEmptyMap && decodedMap.isEmpty()) {
+                decodedMap = null;
+            }
             ReflectionHelpers.setFieldValue(target, reflectionPath, decodedMap);
         } catch (ReflectiveOperationException e) {
             throw new DeserializingException(e);
