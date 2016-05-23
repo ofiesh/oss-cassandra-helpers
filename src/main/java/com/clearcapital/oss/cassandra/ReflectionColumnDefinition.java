@@ -10,6 +10,7 @@ import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.UncheckedAssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.clearcapital.oss.java.exceptions.ReflectionPathException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
@@ -51,27 +52,35 @@ public class ReflectionColumnDefinition implements ColumnDefinition {
         return columnOption;
     }
 
-    public void decode(Object target, Row row, Definition column) throws AssertException, ReflectiveOperationException {
-        Object value = CQLHelpers.getColumn(row, column);
-        if (value == null) {
-            return;
+    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
+        try {
+            Object value = CQLHelpers.getColumn(row, column);
+            if (value == null) {
+                return;
+            }
+            if (value instanceof Collection && (CollectionUtils.isEmpty((Collection<?>) value))) {
+                return;
+            }
+            if (value instanceof Map && (MapUtils.isEmpty((Map<?, ?>) value))) {
+                return;
+            }
+            ReflectionHelpers.setFieldValue(target, getReflectionPath(), value);
+        } catch (AssertException | ReflectiveOperationException e) {
+            throw new DeserializingException(e);
         }
-        if (value instanceof Collection && (CollectionUtils.isEmpty((Collection<?>) value))) {
-            return;
-        }
-        if (value instanceof Map && (MapUtils.isEmpty((Map<?, ?>) value))) {
-            return;
-        }
-        ReflectionHelpers.setFieldValue(target, getReflectionPath(), value);
     }
 
     @Override
-    public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException {
-        Object value = ReflectionHelpers.getFieldValue(object, getReflectionPath());
-        if (value instanceof Enum) {
-            value = value.toString();
+    public void encode(Map<String, Object> result, Object object) throws SerializingException {
+        try {
+            Object value = ReflectionHelpers.getFieldValue(object, getReflectionPath());
+            if (value instanceof Enum) {
+                value = value.toString();
+            }
+            result.put(getColumnName(), value);
+        } catch (ReflectionPathException e) {
+            throw new SerializingException(e);
         }
-        result.put(getColumnName(), value);
     }
 
     public ImmutableList<String> getReflectionPath() {

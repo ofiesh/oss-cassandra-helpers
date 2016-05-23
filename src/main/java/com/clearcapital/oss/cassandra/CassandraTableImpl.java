@@ -96,20 +96,17 @@ public class CassandraTableImpl<TableClass, ModelClass>
                     if (columnDefinition != null) {
 
                         // This if-else-on-type cascade is a little bit of a
-                        // smell;
-                        // it would be better to have a single method in the
+                        // smell; it would be better to have a single method in the
                         // ColumnDefinition interface, but the observable
-                        // behavior
-                        // intentionally differs depending on whether it's a
-                        // Json
-                        // column or not.
+                        // behavior intentionally differs depending on whether it's a
+                        // Json column or not.
 
                         if (columnDefinition instanceof JsonColumnDefinition) {
                             ModelClass jsonResult = ((JsonColumnDefinition) columnDefinition).<ModelClass> decode(row,
                                     column);
 
                             return jsonResult;
-                        } else if (columnDefinition instanceof ReflectionColumnDefinition) {
+                        } else {
                             if (result == null) {
 
                                 @SuppressWarnings("unchecked")
@@ -117,15 +114,8 @@ public class CassandraTableImpl<TableClass, ModelClass>
 
                                 result = targetClass.newInstance();
                             }
-                            ((ReflectionColumnDefinition) columnDefinition).decode(result, row, column);
-                        } else if (columnDefinition instanceof PlaceholderColumnDefinition) {
-                            // ignore
-                        } else if (columnDefinition instanceof ManualColumnDefinition) {
-                            // ignore
-                        } else {
-                            AssertHelpers.isTrue(false,
-                                    "Unexpected ColumnDefinition subclass:" + ColumnDefinition.class.getName());
-                        }
+                            columnDefinition.decode(result, row, column);
+                        } 
                     }
 
                 } catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
@@ -304,15 +294,14 @@ public class CassandraTableImpl<TableClass, ModelClass>
         return resultSet.isExhausted();
     }
 
-    protected Map<String, Object> getFields(final ModelClass object)
-            throws AssertException, ReflectionPathException, SerializingException {
+    protected Map<String, Object> getFields(final ModelClass object) throws AssertException, SerializingException {
         AssertHelpers.notNull(getTableClass(), "tableClass");
         AssertHelpers.notNull(object, "object");
-
         CassandraTable annotation = getAnnotation();
         Map<String, Object> result = new TreeMap<String, Object>();
 
-        Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor.getColumnDefinitionList(annotation);
+        Collection<ColumnDefinition> columnDefinitions = CassandraTableProcessor
+                .getColumnDefinitionList(annotation);
         for (ColumnDefinition columnDefinition : columnDefinitions) {
             columnDefinition.encode(result, object);
         }
@@ -561,10 +550,11 @@ public class CassandraTableImpl<TableClass, ModelClass>
         }
     }
 
-    public <T> void addField(Map<String, Object> fields, final String columnName, final Map<String, T> value, final Class<T> mapType) {
+    public <T> void addField(Map<String, Object> fields, final String columnName, final Map<String, T> value,
+            final Class<T> mapType) {
         ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
         DataType dataType = columnDefinition.getDataType();
-    
+
         if (mapType.equals(Boolean.class)) {
             if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -573,7 +563,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
                         "Field:" + columnName + " expected " + dataType + " got map<text,boolean>");
             }
         }
-    
+
         if (mapType.equals(Double.class)) {
             if (DataType.map(DataType.text(), DataType.cdouble()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -582,7 +572,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
                         "Field:" + columnName + " expected " + dataType + " got map<text,double>");
             }
         }
-    
+
         if (mapType.equals(String.class)) {
             if (DataType.map(DataType.text(), DataType.text()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -593,10 +583,11 @@ public class CassandraTableImpl<TableClass, ModelClass>
         }
     }
 
-    public <T> void addField(Map<String, Object> fields, final String columnName, final Set<T> value, final Class<T> mapType) {
+    public <T> void addField(Map<String, Object> fields, final String columnName, final Set<T> value,
+            final Class<T> mapType) {
         ColumnDefinition columnDefinition = columnDefinitionMap.get(columnName);
         DataType dataType = columnDefinition.getDataType();
-    
+
         if (mapType.equals(Boolean.class)) {
             if (DataType.set(DataType.cboolean()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -605,7 +596,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
                         "Column " + columnName + ": expected " + dataType + " got set<boolean>");
             }
         }
-    
+
         if (mapType.equals(Double.class)) {
             if (DataType.set(DataType.cdouble()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -614,7 +605,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
                         "Column " + columnName + ": expected " + dataType + " got set<double>");
             }
         }
-    
+
         if (mapType.equals(String.class)) {
             if (DataType.set(DataType.text()).equals(dataType)) {
                 fields.put(columnName, value);
@@ -655,5 +646,5 @@ public class CassandraTableImpl<TableClass, ModelClass>
             addRangeQueryFilter(query, fieldName, range);
         }
     }
-    
+
 }

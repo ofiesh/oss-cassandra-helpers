@@ -3,8 +3,12 @@ package com.clearcapital.oss.cassandra;
 import java.util.Map;
 
 import com.clearcapital.oss.cassandra.annotations.Column;
+import com.clearcapital.oss.java.exceptions.AssertException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.google.common.base.MoreObjects;
 
 /**
@@ -71,6 +75,7 @@ public class PlaceholderColumnDefinition implements ColumnDefinition {
         public Builder fromAnnotation(Column column) {
             return setAnnotation(column).setColumnName(column.cassandraName());
         }
+
     }
 
     @Override
@@ -83,4 +88,8 @@ public class PlaceholderColumnDefinition implements ColumnDefinition {
         return false;
     }
 
+    @Override
+    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
+        // NO-OP. This column will be populated (maybe?) by the table class.
+    }
 }

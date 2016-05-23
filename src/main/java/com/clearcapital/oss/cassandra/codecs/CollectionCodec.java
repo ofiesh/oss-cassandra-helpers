@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
+import com.clearcapital.oss.java.exceptions.ReflectionPathException;
+import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.clearcapital.oss.json.JsonSerializer;
 
 /*
@@ -17,7 +21,7 @@ import com.clearcapital.oss.json.JsonSerializer;
  *
  * {@code CollectionCodec} is thread safe.
  */
-public class CollectionCodec implements CassandraColumnCodec {
+public class CollectionCodec implements CassandraCodec {
 
     Collection<String> reflectionPath;
     String cassandraColumnName;
@@ -65,56 +69,68 @@ public class CollectionCodec implements CassandraColumnCodec {
     }
 
     @Override
-    public void encodeColumn(final Map<String, Object> target, final Object sourceObject) throws Exception {
+    public void encode(final Map<String, Object> target, final Object sourceObject)
+            throws AssertException, SerializingException {
         AssertHelpers.notNull(target, "target");
         AssertHelpers.notNull(sourceObject, "sourceObject");
 
-        Object fieldValue = ReflectionHelpers.getFieldValue(sourceObject, reflectionPath);
+        try {
+            Object fieldValue = ReflectionHelpers.getFieldValue(sourceObject, reflectionPath);
 
-        if (fieldValue != null) {
-            @SuppressWarnings("unchecked")
-            Collection<Object> collection = (Collection<Object>) getCollectionClass().newInstance();
-            AssertHelpers.isTrue(fieldValue instanceof Collection, "Cannot use collection codec on non set field");
-            if (fieldValue instanceof Collection) {
+            if (fieldValue != null) {
                 @SuppressWarnings("unchecked")
-                Collection<Object> fieldSet = (Collection<Object>) fieldValue;
+                Collection<Object> collection = (Collection<Object>) getCollectionClass().newInstance();
+                AssertHelpers.isTrue(fieldValue instanceof Collection, "Cannot use collection codec on non set field");
+                if (fieldValue instanceof Collection) {
+                    @SuppressWarnings("unchecked")
+                    Collection<Object> fieldSet = (Collection<Object>) fieldValue;
 
-                for (Object item : fieldSet) {
-                    if (item instanceof Enum) {
-                        collection.add(item.toString());
-                    } else {
-                        collection.add(JsonSerializer.getInstance().getStringRepresentation(item));
+                    for (Object item : fieldSet) {
+                        if (item instanceof Enum) {
+                            collection.add(item.toString());
+                        } else {
+                            collection.add(JsonSerializer.getInstance().getStringRepresentation(item));
+                        }
                     }
                 }
+                target.put(cassandraColumnName, collection);
+            } else {
+                target.put(cassandraColumnName, null);
             }
-            target.put(cassandraColumnName, collection);
-        } else {
-            target.put(cassandraColumnName, null);
+        } catch (ReflectionPathException | InstantiationException | IllegalAccessException e) {
+            throw new SerializingException(e);
         }
-
     }
 
     @Override
-    public void decodeColumn(final Object target, final Object fieldValue) throws Exception {
+    public void decode(final Object target, final Object fieldValue) throws AssertException, DeserializingException {
         AssertHelpers.notNull(target, "target");
         AssertHelpers.notNull(fieldValue, "fieldValue");
         AssertHelpers.isTrue(fieldValue instanceof Collection, "Cannot use collection codec on non set field");
 
-        @SuppressWarnings("unchecked")
-        Collection<Object> collection = (Collection<Object>) getCollectionClass().newInstance();
+        try {
+            @SuppressWarnings("unchecked")
+            Collection<Object> collection = (Collection<Object>) getCollectionClass().newInstance();
 
-        @SuppressWarnings("unchecked")
-        Collection<Object> fieldSet = (Collection<Object>) fieldValue;
+            @SuppressWarnings("unchecked")
+            Collection<Object> fieldSet = (Collection<Object>) fieldValue;
 
-        for (Object value : fieldSet) {
-            if (value != null) {
-                collection.add(JsonSerializer.getInstance().getObject((String) value, modelClass));
-            } else {
-                collection.add(null);
+            for (Object value : fieldSet) {
+                if (value != null) {
+                    collection.add(JsonSerializer.getInstance().getObject((String) value, modelClass));
+                } else {
+                    collection.add(null);
+                }
             }
-        }
 
-        ReflectionHelpers.setFieldValue(target, reflectionPath, collection);
+            ReflectionHelpers.setFieldValue(target, reflectionPath, collection);
+        } catch (ReflectiveOperationException e) {
+            throw new DeserializingException(e);
+        }
+    }
+
+    @Override
+    public void initialize(Column annotation) throws AssertException {
     }
 
 }

@@ -114,4 +114,9 @@ public class JsonColumnDefinition implements ColumnDefinition {
         return true;
     }
 
+    @Override
+    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
+        AssertHelpers.fail("This method should not be called by CassandraTableImpl");
+    }
+
 }

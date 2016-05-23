@@ -10,4 +10,6 @@ public @interface MapCodecInfo {
 
     String prefixString() default "";
 
+    String[] reflectionPath() default {};
+
 }

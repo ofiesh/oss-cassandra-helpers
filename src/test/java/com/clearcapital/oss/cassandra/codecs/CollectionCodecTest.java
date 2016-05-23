@@ -23,7 +23,7 @@ public class CollectionCodecTest {
 
         Map<String, Object> actual = new HashMap<>();
 
-        codec.encodeColumn(actual, new TestSomeFields(new SomeField("a", "b"), new SomeField("b", "c")));
+        codec.encode(actual, new TestSomeFields(new SomeField("a", "b"), new SomeField("b", "c")));
 
         ImmutableMap<String, List<String>> expected = ImmutableMap.of("some_fields",
                 Arrays.asList("{\"foo\":\"a\",\"bar\":\"b\"}", "{\"foo\":\"b\",\"bar\":\"c\"}"));
@@ -42,7 +42,7 @@ public class CollectionCodecTest {
 
         TestSomeFields actual = new TestSomeFields();
 
-        codec.decodeColumn(actual, Arrays.asList("{\"foo\":\"a\",\"bar\":\"b\"}", "{\"foo\":\"b\",\"bar\":\"c\"}"));
+        codec.decode(actual, Arrays.asList("{\"foo\":\"a\",\"bar\":\"b\"}", "{\"foo\":\"b\",\"bar\":\"c\"}"));
 
         Assert.assertEquals(new TestSomeFields(new SomeField("a", "b"), new SomeField("b", "c")), actual);
     }

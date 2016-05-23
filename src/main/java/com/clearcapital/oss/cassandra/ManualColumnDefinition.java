@@ -4,9 +4,12 @@ import java.util.Map;
 
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.java.UncheckedAssertHelpers;
-import com.clearcapital.oss.java.exceptions.ReflectionPathException;
+import com.clearcapital.oss.java.exceptions.AssertException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
+import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Row;
 import com.google.common.base.MoreObjects;
 
 public class ManualColumnDefinition implements ColumnDefinition {
@@ -90,13 +93,18 @@ public class ManualColumnDefinition implements ColumnDefinition {
     }
 
     @Override
-    public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException {
+    public void encode(Map<String, Object> result, Object object) throws AssertException, SerializingException {
         // NO-OP. This column will be populated (maybe?) by the table class.
     }
 
     @Override
     public boolean getIsIncludedInInsertStatement() {
         return true;
+    }
+
+    @Override
+    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
+        // NO-OP. This column will be populated (maybe?) by the table class.
     }
 
 }
