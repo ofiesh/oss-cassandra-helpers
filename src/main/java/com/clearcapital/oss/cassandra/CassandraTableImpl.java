@@ -570,25 +570,25 @@ public class CassandraTableImpl<TableClass, ModelClass>
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Boolean> Cassandra column type.");
+                        "Field:" + columnName + " expected " + dataType + " got map<text,boolean>");
             }
         }
     
         if (mapType.equals(Double.class)) {
-            if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
+            if (DataType.map(DataType.text(), DataType.cdouble()).equals(dataType)) {
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Double> Cassandra column type.");
+                        "Field:" + columnName + " expected " + dataType + " got map<text,double>");
             }
         }
     
         if (mapType.equals(String.class)) {
-            if (DataType.map(DataType.text(), DataType.cboolean()).equals(dataType)) {
+            if (DataType.map(DataType.text(), DataType.text()).equals(dataType)) {
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Text> Cassandra column type.");
+                        "Field:" + columnName + " expected " + dataType + " got map<text,string>");
             }
         }
     }
@@ -602,25 +602,25 @@ public class CassandraTableImpl<TableClass, ModelClass>
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Boolean> Cassandra column type.");
+                        "Column " + columnName + ": expected " + dataType + " got set<boolean>");
             }
         }
     
         if (mapType.equals(Double.class)) {
-            if (DataType.set(DataType.cboolean()).equals(dataType)) {
+            if (DataType.set(DataType.cdouble()).equals(dataType)) {
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Double> Cassandra column type.");
+                        "Column " + columnName + ": expected " + dataType + " got set<double>");
             }
         }
     
         if (mapType.equals(String.class)) {
-            if (DataType.set(DataType.cboolean()).equals(dataType)) {
+            if (DataType.set(DataType.text()).equals(dataType)) {
                 fields.put(columnName, value);
             } else {
                 throw new IllegalArgumentException(
-                        "Cannot assign int value to non-Map<Text, Text> Cassandra column type.");
+                        "Column " + columnName + ": expected " + dataType + " got set<boolean>");
             }
         }
     }
