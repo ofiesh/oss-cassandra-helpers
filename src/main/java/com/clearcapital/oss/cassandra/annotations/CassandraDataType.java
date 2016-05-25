@@ -10,6 +10,7 @@ public enum CassandraDataType {
     COUNTER(DataType.counter()),
     DOUBLE(DataType.cdouble()),
     INT(DataType.cint()),
+    JSON_TEXT(DataType.text()),
     TEXT(DataType.text()),
     TIMESTAMP(DataType.timestamp()),
     SET_TEXT(DataType.set(DataType.text())),
