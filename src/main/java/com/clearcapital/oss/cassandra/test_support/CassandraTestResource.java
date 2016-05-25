@@ -18,6 +18,7 @@ import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.commands.CommandExecutionException;
 import com.clearcapital.oss.executors.ImmediateCommandExecutor;
+import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.clearcapital.oss.json.JsonSerializer;
 import com.datastax.driver.core.TableMetadata;
@@ -61,8 +62,16 @@ public class CassandraTestResource extends ExternalResource {
         String multiRingGroup = CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup();
 
         multiRingClientManager.getRingClientForGroup(multiRingGroup).createPreferredKeyspace();
-        while (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+        if (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
             CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+        }
+        while (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+            try {
+                Thread.sleep(1000);
+                CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+            } catch (InterruptedException e) {
+                AssertHelpers.fail("interrupted while trying to drop table");
+            }
         }
         CassandraTableProcessor.tableBuilder(new ImmediateCommandExecutor(), multiRingClientManager, tableClass)
                 .build();

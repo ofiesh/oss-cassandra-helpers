@@ -65,8 +65,10 @@ public class CassandraCommand implements DebuggableCommand {
                     "Attempted to create a CassandraBundle without providing a location.");
             AssertHelpers.notNull(result.session,
                     "Attempted to create a CassandraBundle without providing a dseSession.");
-            AssertHelpers.notNull(result.statement,
-                    "Attempted to create a CassandraBundle without providing a Statement.");
+            /*
+             * AssertHelpers.notNull(result.statement,
+             * "Attempted to create a CassandraBundle without providing a Statement.");
+             */
             return result;
         }
 
@@ -94,7 +96,6 @@ public class CassandraCommand implements DebuggableCommand {
         }
     }
 
-
     protected SessionHelper getSession() {
         return session;
     }
@@ -102,15 +103,17 @@ public class CassandraCommand implements DebuggableCommand {
     @Override
     public void execute() throws CommandExecutionException {
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Executing statement:" + CQLHelpers.getQueryText(statement));
+            if (statement != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Executing statement:" + CQLHelpers.getQueryText(statement));
+                }
+                getSession().execute(statement);
             }
-            getSession().execute(statement);
         } catch (Throwable e) {
             log.error("The following statement caused an exception, built here:" + getLocation() + "\n debugInfo:"
                     + debugInfo + "\n queryText:" + CQLHelpers.getQueryText(statement), e);
-            throw new CommandExecutionException("Could not execute statements from CassandraCommand, built here:"
-                    + getLocation(), e);
+            throw new CommandExecutionException(
+                    "Could not execute statements from CassandraCommand, built here:" + getLocation(), e);
         }
     }
 }

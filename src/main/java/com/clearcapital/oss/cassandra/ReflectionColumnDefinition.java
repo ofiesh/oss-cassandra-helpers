@@ -61,7 +61,7 @@ public class ReflectionColumnDefinition implements ColumnDefinition {
 
     public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
         try {
-            Object value = CQLHelpers.getColumn(row, column);
+            Object value = RowHelpers.getColumn(row, column);
             if (value == null) {
                 return;
             }

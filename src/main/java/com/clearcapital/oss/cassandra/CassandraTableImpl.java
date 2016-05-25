@@ -204,7 +204,7 @@ public class CassandraTableImpl<TableClass, ModelClass>
      * <p>
      * <strong>NOTE:</strong> if this throws a NPE inside the {@code ImmutableList#copyOf(Iterable)} method, there is a
      * good chance that your table class has a {@link ReflectionColumnInfo#javaPath()} to a field that doesn't exist in
-     * the {@link CassandraTable#modelClass()}.
+     * the {@link CassandraTable#modelClass()}. Check the console log for warnings about failure to deserialize row.
      * </p>
      */
     public Collection<ModelClass> readCollection(Statement statement) throws CassandraException, AssertException {

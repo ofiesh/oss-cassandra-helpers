@@ -54,7 +54,7 @@ public class JsonColumnDefinition implements ColumnDefinition {
     }
 
     public <T> T decode(Row row, Definition column) throws AssertException, DeserializingException {
-        Object value = CQLHelpers.getColumn(row, column);
+        Object value = RowHelpers.getColumn(row, column);
         AssertHelpers.isTrue(value instanceof String, "value instanceof String");
 
         @SuppressWarnings("unchecked")

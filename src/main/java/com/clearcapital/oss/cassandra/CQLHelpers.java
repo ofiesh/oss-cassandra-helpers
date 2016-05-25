@@ -4,9 +4,7 @@ import java.util.Collection;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.RegularStatement;
-import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.StatementWrapper;
 import com.datastax.driver.core.StatementWrapperHack;
@@ -86,11 +84,6 @@ public class CQLHelpers {
 
 	public static String getUniqueName(String prefix) {
         String result = prefix + (new UUID()).toString().replace("-", "_");
-        return result;
-    }
-	
-    public static Object getColumn(final Row row, final Definition column) {
-        Object result = row.getObject(column.getName());
         return result;
     }
 	

@@ -113,7 +113,7 @@ public class CodecColumnDefinition implements ColumnDefinition {
 
     @Override
     public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
-        Object fieldValue = CQLHelpers.getColumn(row, column);
+        Object fieldValue = RowHelpers.getColumn(row, column);
         getCodec().decode(target, fieldValue);
     }
 
