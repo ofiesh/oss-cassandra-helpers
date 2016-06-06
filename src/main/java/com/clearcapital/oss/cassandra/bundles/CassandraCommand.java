@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.commands.CommandExecutionException;
+import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.StackHelpers;
@@ -28,6 +28,15 @@ public class CassandraCommand implements DebuggableCommand {
     private Statement statement;
 
     private final Collection<Object> debugInfo = new ArrayList<Object>();
+
+    public CassandraCommand() {
+    }
+
+    public CassandraCommand(CassandraCommand that) {
+        this.session = that.session;
+        this.location = that.location;
+        this.statement = that.statement;
+    }
 
     public String getLocation() {
         return location;
@@ -69,7 +78,8 @@ public class CassandraCommand implements DebuggableCommand {
              * AssertHelpers.notNull(result.statement,
              * "Attempted to create a CassandraBundle without providing a Statement.");
              */
-            return result;
+            CassandraCommand command = new CassandraCommand(result);
+            return command;
         }
 
         /**
