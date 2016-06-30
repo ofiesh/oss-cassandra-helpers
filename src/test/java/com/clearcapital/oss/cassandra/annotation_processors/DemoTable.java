@@ -13,7 +13,7 @@ import com.clearcapital.oss.cassandra.annotations.table_properties.TableProperti
 import com.clearcapital.oss.cassandra.bundles.CassandraCommand;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
-import com.clearcapital.oss.commands.Command;
+import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.clearcapital.oss.java.exceptions.ReflectionPathException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
@@ -66,7 +66,7 @@ public class DemoTable extends CassandraTableImpl<DemoTable, DemoModel> {
                 ConsistencyLevel.LOCAL_QUORUM);
     }
 
-    public Command insert(DemoModel value) throws AssertException, ReflectionPathException, SerializingException {
+    public DebuggableCommand insert(DemoModel value) throws AssertException, ReflectionPathException, SerializingException {
         Map<String, Object> fields = getFields(value);
         CassandraCommand result = CassandraCommand.builder(getSession())
                 .setStatement(psInsert.bind(fields.values().toArray())).build();

@@ -4,15 +4,12 @@ import java.util.Map;
 
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.java.UncheckedAssertHelpers;
-import com.clearcapital.oss.java.exceptions.AssertException;
-import com.clearcapital.oss.java.exceptions.DeserializingException;
-import com.clearcapital.oss.java.exceptions.SerializingException;
 import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
 import com.google.common.base.MoreObjects;
 
-public class ManualColumnDefinition implements ColumnDefinition {
+public class SolrCopyFieldDefinition implements ColumnDefinition {
 
     String columnName;
     DataType cassandraDataType;
@@ -48,7 +45,8 @@ public class ManualColumnDefinition implements ColumnDefinition {
     public String toString() {
         return MoreObjects.toStringHelper(this).add("columnName", getColumnName())
                 .add("columnOption", getColumnOption()).add("dataType", getDataType())
-                .add("isCreatedElsewhere", getIsCreatedElsewhere()).add("annotation", getAnnotation()).toString();
+                .add("isCreatedElsewhere", getIsCreatedElsewhere())
+                .add("annotation", getAnnotation()).toString();
     }
 
     public static Builder builder() {
@@ -57,9 +55,9 @@ public class ManualColumnDefinition implements ColumnDefinition {
 
     public static class Builder {
 
-        ManualColumnDefinition result = new ManualColumnDefinition();
+        SolrCopyFieldDefinition result = new SolrCopyFieldDefinition();
 
-        public ManualColumnDefinition build() throws IllegalStateException {
+        public SolrCopyFieldDefinition build() throws IllegalStateException {
             UncheckedAssertHelpers.notNull(result.columnName, "result.cassandraDataType");
             UncheckedAssertHelpers.notNull(result.cassandraDataType, "result.cassandraDataType");
             return result;
@@ -67,8 +65,8 @@ public class ManualColumnDefinition implements ColumnDefinition {
 
         public Builder fromAnnotation(Column columnAnnotation) {
             return setAnnotation(columnAnnotation).setColumnName(columnAnnotation.cassandraName())
-                    .setDataType(columnAnnotation.manualColumnInfo().dataType().getDataType())
-                    .setColumnOption(columnAnnotation.manualColumnInfo().columnOption());
+                    .setDataType(columnAnnotation.solrCopyField().dataType().getDataType())
+                    .setColumnOption(ColumnOption.NULL);
         }
 
         public Builder setAnnotation(Column value) {
@@ -93,18 +91,17 @@ public class ManualColumnDefinition implements ColumnDefinition {
     }
 
     @Override
-    public void encode(Map<String, Object> result, Object object) throws AssertException, SerializingException {
+    public void encode(Map<String, Object> result, Object object) {
         // NO-OP. This column will be populated (maybe?) by the table class.
     }
 
     @Override
     public boolean getIsIncludedInInsertStatement() {
-        return true;
+        return false;
     }
 
     @Override
-    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException {
+    public void decode(Object target, Row row, Definition column) {
         // NO-OP. This column will be populated (maybe?) by the table class.
     }
-
 }

@@ -18,6 +18,7 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.Statement;
@@ -99,6 +100,10 @@ public class SessionHelper {
         return execute(statement, MAX_RETRIES, false);
     }
 
+    public ResultSetFuture executeAsync(final Statement statement) throws CassandraException {
+        return getSession().executeAsync(statement);
+    }
+
     public KeyspaceMetadata getKeyspaceInfo() {
         return session.getCluster().getMetadata().getKeyspace(session.getLoggedKeyspace());
     }
@@ -152,6 +157,14 @@ public class SessionHelper {
         return session.getCluster().getMetadata().getKeyspace(getLoggedKeyspace()).getTable(tableName);
     }
 
+    public URI getSolrResourceUri(String tableName) {
+        UriBuilder uriBuilder = UriBuilder.fromUri(ringConfiguration.getSolrUri());
+        // uriBuilder.path("resource");
+        uriBuilder.path("{arg1}.{arg2}");
+        URI uri = uriBuilder.build(getLoggedKeyspace(), tableName);
+        return uri;
+    }
+
     public URI getSolrResourceUri(String tableName, String destName) {
         UriBuilder uriBuilder = UriBuilder.fromUri(ringConfiguration.getSolrUri());
         uriBuilder.path("resource");
@@ -181,7 +194,7 @@ public class SessionHelper {
     }
 
     public void dropKeyspace(String keyspaceName) {
-        session.execute(new SimpleStatement("DROP KEYSPACE " + keyspaceName));
+        session.execute(new SimpleStatement("DROP KEYSPACE IF EXISTS " + keyspaceName));
     }
 
     public void truncateTable(String tableName) {

@@ -3,9 +3,12 @@ package com.clearcapital.oss.cassandra;
 import java.util.Map;
 
 import com.clearcapital.oss.cassandra.annotations.Column;
-import com.clearcapital.oss.java.exceptions.ReflectionPathException;
+import com.clearcapital.oss.java.exceptions.AssertException;
+import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.clearcapital.oss.java.exceptions.SerializingException;
+import com.datastax.driver.core.ColumnDefinitions.Definition;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Row;
 
 public interface ColumnDefinition {
 
@@ -27,6 +30,11 @@ public interface ColumnDefinition {
      * itself, or by integrations thereof, like DSE/Solr.
      */
     public boolean getIsCreatedElsewhere();
+    
+    /**
+     * If true, this definition should be included when building an insert statement
+     */
+    public boolean getIsIncludedInInsertStatement();
 
     /**
      * Name of the column, from Cassandra's perspective.
@@ -50,6 +58,10 @@ public interface ColumnDefinition {
     /**
      * Encode relevant portion(s) of object as an entry in result.
      */
-    public void encode(Map<String, Object> result, Object object) throws SerializingException, ReflectionPathException;
+    public void encode(Map<String, Object> result, Object object) throws AssertException, SerializingException;
 
+    /**
+     * Decode relevant portion(s) of target.
+     */
+    public void decode(Object target, Row row, Definition column) throws AssertException, DeserializingException;
 }

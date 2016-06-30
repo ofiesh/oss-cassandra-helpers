@@ -12,10 +12,6 @@ import javax.lang.model.SourceVersion;
 
 import org.apache.cassandra.locator.EndpointSnitchInfoMBean;
 import org.apache.cassandra.tools.NodeProbe;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
-import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,20 +30,6 @@ import com.google.common.collect.Iterables;
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class TransformerProcessor<T extends WithMultiRingConfiguration> {
 
-    public static Reflections getReflections(final Collection<String> packageNames) {
-        Reflections reflections = null;
-        for (String packageName : packageNames) {
-            Reflections packageReflections = new Reflections(ClasspathHelper.forPackage(packageName),
-                    new TypeAnnotationsScanner(), new SubTypesScanner());
-            if (reflections == null) {
-                reflections = packageReflections;
-            } else {
-                reflections.merge(packageReflections);
-            }
-        }
-        return reflections;
-    }
-
     /**
      * Call processPredicate.apply() for every @{@link Transformer} -annotated class.
      * 
@@ -65,6 +47,9 @@ public class TransformerProcessor<T extends WithMultiRingConfiguration> {
     }
 
     public static boolean implementsRecordTransformer(Class<?> candidate) {
+        if (candidate == null) {
+            return false;
+        }
         for (Class<?> transformerInterface : candidate.getInterfaces()) {
             if (transformerInterface == RecordTransformer.class) {
                 return true;
@@ -141,7 +126,7 @@ public class TransformerProcessor<T extends WithMultiRingConfiguration> {
         private void executeListTransformers(Set<Class<?>> transformers) {
             log.info("=== Listing available transformers ===");
             for (Class<?> transformerClass : transformers) {
-                log.debug("* " + transformerClass.getName());
+                log.info("* " + transformerClass.getName());
             }
         }
 

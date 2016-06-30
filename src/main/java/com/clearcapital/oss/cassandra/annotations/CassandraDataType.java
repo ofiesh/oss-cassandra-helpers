@@ -10,17 +10,17 @@ public enum CassandraDataType {
     COUNTER(DataType.counter()),
     DOUBLE(DataType.cdouble()),
     INT(DataType.cint()),
+    JSON_TEXT(DataType.text()),
     TEXT(DataType.text()),
     TIMESTAMP(DataType.timestamp()),
     SET_TEXT(DataType.set(DataType.text())),
     LIST_TEXT(DataType.list(DataType.text())),
-    // MAP_TEXTBIGINT("map<text, bigint>"),
-    // MAP_TEXTBOOLEAN("map<text, boolean>"),
-    // MAP_TEXTDOUBLE("map<text, double>"),
-    // MAP_TEXTTEXT("map<text, text>"),
-    // SET_BOOLEAN("set<boolean>"),
-    // SET_DOUBLE("set<double>"),
-    ;
+    MAP_TEXTTEXT(DataType.map(DataType.text(), DataType.text())),
+    MAP_TEXTBIGINT(DataType.map(DataType.text(), DataType.bigint())),
+    MAP_TEXTBOOLEAN(DataType.map(DataType.text(), DataType.cboolean())),
+    MAP_TEXTDOUBLE(DataType.map(DataType.text(), DataType.cdouble())),
+    SET_BOOLEAN(DataType.set(DataType.cboolean())),
+    SET_DOUBLE(DataType.set(DataType.cdouble()));
 
     private final DataType dataType;
 

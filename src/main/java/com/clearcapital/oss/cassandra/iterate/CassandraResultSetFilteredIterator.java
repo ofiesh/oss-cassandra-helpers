@@ -8,16 +8,19 @@ import org.slf4j.LoggerFactory;
 import com.clearcapital.oss.java.exceptions.DeserializingException;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
 
-public class CassandraResultSetIterator<E> implements Iterator<E>, Iterable<E> {
+public class CassandraResultSetFilteredIterator<E> implements Iterator<E>, Iterable<E> {
 
-    private static Logger log = LoggerFactory.getLogger(CassandraResultSetIterator.class);
+    private static Logger log = LoggerFactory.getLogger(CassandraResultSetFilteredIterator.class);
     private final Iterator<Row> iterator;
     private final CassandraRowDeserializer<E> deserializer;
     private Row row;
 
-    public CassandraResultSetIterator(ResultSet resultSet, CassandraRowDeserializer<E> deserializer) {
-        this.iterator = resultSet.iterator();
+    public CassandraResultSetFilteredIterator(ResultSet resultSet, Predicate<Row> predicate,
+            CassandraRowDeserializer<E> deserializer) {
+        this.iterator = Iterators.filter(resultSet.iterator(), predicate);
         this.deserializer = deserializer;
     }
 
@@ -32,7 +35,7 @@ public class CassandraResultSetIterator<E> implements Iterator<E>, Iterable<E> {
         try {
             return deserializer.deserializeRow(row);
         } catch (DeserializingException e) {
-            log.warn("Could not deserializeRow",e);
+            log.warn("Could not deserializeRow", e);
             return null;
         }
     }

@@ -21,7 +21,7 @@ public class CollectionEnumCodecTest {
 
         Map<String, Object> actual = new HashMap<>();
 
-        codec.encodeColumn(actual, new TestEnumModel(TestEnum.FOO, TestEnum.FOOBAR));
+        codec.encode(actual, new TestEnumModel(TestEnum.FOO, TestEnum.FOOBAR));
 
         Assert.assertEquals("List of enums did not encode some_enums=[BAR, FOOBAR]",
                 ImmutableMap.of("some_enums", Arrays.asList("FOO", "FOOBAR")), actual);
@@ -35,7 +35,7 @@ public class CollectionEnumCodecTest {
 
         TestEnumModel actual = new TestEnumModel();
 
-        codec.decodeColumn(actual, Arrays.asList("BAR", "FOOBAR"));
+        codec.decode(actual, Arrays.asList("BAR", "FOOBAR"));
 
         Assert.assertEquals("List of enums did not decode to someEnums=[TestEnum.BAR, TestEnum.FOOBAR]",
                 new TestEnumModel(TestEnum.BAR, TestEnum.FOOBAR), actual);

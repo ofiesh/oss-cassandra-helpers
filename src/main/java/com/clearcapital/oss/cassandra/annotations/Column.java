@@ -15,6 +15,8 @@ package com.clearcapital.oss.cassandra.annotations;
  * <li>{@link manualColumnInfo} - the table class is responsible for "codecing" this column.</li>
  * <li>{@link reflectionColumnInfo} - use Reflection to get/set the specified member.</li>
  * <li>{@link jsonColumnInfo} - use JSON to codec the entire model object</li>
+ * <li>{@link solrCopyField} - the field is defined in solr schema as a copy field.</li>
+ * <li>{@link codecColumnInfo} - the field is coded/decoded by the specified class.</li>
  * </ul>
  * 
  * @author eehlinger
@@ -30,5 +32,9 @@ public @interface Column {
     ReflectionColumnInfo reflectionColumnInfo() default @ReflectionColumnInfo(isSelected = false);
 
     JsonColumnInfo jsonColumnInfo() default @JsonColumnInfo(isSelected = false);
+
+    SolrCopyFieldInfo solrCopyField() default @SolrCopyFieldInfo(isSelected = false);
+
+    CodecColumnInfo codecColumnInfo() default @CodecColumnInfo(isSelected = false);
 
 }

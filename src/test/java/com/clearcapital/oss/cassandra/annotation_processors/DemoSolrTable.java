@@ -30,7 +30,8 @@ import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
         },
         solrOptions = @SolrOptions(
            schemaResourceName = "test/tables/DemoSolrTable/schema.xml",
-           solrconfigResourceName = "test/tables/DemoSolrTable/solrconfig.xml"
+           solrconfigResourceName = "test/tables/DemoSolrTable/solrconfig.xml",
+           coreCreationTimeoutMs = 10000
         )
     ) // @formatter:on
 public class DemoSolrTable extends CassandraTableImpl<DemoSolrTable,DemoModel> {

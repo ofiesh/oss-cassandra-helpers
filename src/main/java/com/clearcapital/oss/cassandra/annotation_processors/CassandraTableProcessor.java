@@ -8,12 +8,14 @@ import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clearcapital.oss.cassandra.CodecColumnDefinition;
 import com.clearcapital.oss.cassandra.ColumnDefinition;
 import com.clearcapital.oss.cassandra.JsonColumnDefinition;
 import com.clearcapital.oss.cassandra.ManualColumnDefinition;
 import com.clearcapital.oss.cassandra.PlaceholderColumnDefinition;
 import com.clearcapital.oss.cassandra.ReflectionColumnDefinition;
 import com.clearcapital.oss.cassandra.RingClient;
+import com.clearcapital.oss.cassandra.SolrCopyFieldDefinition;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.annotations.Column;
 import com.clearcapital.oss.cassandra.configuration.AutoSchemaConfiguration;
@@ -21,9 +23,12 @@ import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
+import com.clearcapital.oss.java.ReflectionHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
  * Support for processing {@link CassandraTable} annotated classes.
@@ -63,8 +68,10 @@ public class CassandraTableProcessor {
      * @param annotation
      * @return a collection consisting of the ColumnDefinition objects provided by the enum constants in
      *         annotation.columnDefinitions()
+     * @throws AssertException
      */
-    public static Collection<ColumnDefinition> getColumnDefinitionList(final CassandraTable annotation) {
+    public static Collection<ColumnDefinition> getColumnDefinitionList(final CassandraTable annotation)
+            throws AssertException {
         if (!columnDefinitionLists.containsKey(annotation)) {
             cacheColumnDefinitions(annotation);
         }
@@ -84,8 +91,11 @@ public class CassandraTableProcessor {
      * @param annotation
      * @return a collection consisting of the ColumnDefinition objects provided by the enum constants in
      *         annotation.columnDefinitions()
+     * @throws AssertException
+     * @throws CassandraException
      */
-    public static Map<String, ColumnDefinition> getColumnDefinitionMap(final CassandraTable annotation) {
+    public static Map<String, ColumnDefinition> getColumnDefinitionMap(final CassandraTable annotation)
+            throws AssertException {
         if (!columnDefinitionMaps.containsKey(annotation)) {
             cacheColumnDefinitions(annotation);
         }
@@ -110,38 +120,43 @@ public class CassandraTableProcessor {
         return new SchemaComparator(executor, client, autoSchemaConfiguration);
     }
 
-    private static void cacheColumnDefinitions(final CassandraTable annotation) {
+    public static ColumnDefinition makeColumnDefinition(final Column column) throws AssertException {
+        if (column.reflectionColumnInfo().isSelected()) {
+            /**
+             * TODO: figure out a way to validate that the {@link ReflectionColumnDefinition#reflectionPath} points to a
+             * field that actually exists.
+             */
+            return ReflectionColumnDefinition.builder().fromAnnotation(column).build();
+        } else if (column.jsonColumnInfo().isSelected()) {
+            return JsonColumnDefinition.builder().fromAnnotation(column).build();
+        } else if (column.manualColumnInfo().isSelected()) {
+            return ManualColumnDefinition.builder().fromAnnotation(column).build();
+        } else if (column.solrCopyField().isSelected()) {
+            return SolrCopyFieldDefinition.builder().fromAnnotation(column).build();
+        } else if (column.codecColumnInfo().isSelected()) {
+            return CodecColumnDefinition.builder().fromAnnotation(column).build();
+        } else if (column.createdElsewhere()) {
+            return PlaceholderColumnDefinition.builder().fromAnnotation(column).build();
+        } else {
+            AssertHelpers.fail("Invalid column annotation:" + column.cassandraName());
+            return null; // should never get here ^^^
+        }
+    }
+
+    private static void cacheColumnDefinitions(final CassandraTable annotation) throws AssertException {
         Asserts.notNull(annotation, "Annotation");
         ImmutableMap.Builder<String, ColumnDefinition> mapBuilder = ImmutableMap.<String, ColumnDefinition> builder();
         ImmutableList.Builder<ColumnDefinition> listBuilder = ImmutableList.<ColumnDefinition> builder();
         for (Column column : annotation.columns()) {
-            if (column.reflectionColumnInfo().isSelected()) {
-                /** TODO: figure out a way to validate that the {@link ReflectionColumnDefinition#reflectionPath} points to a
-                 * field that actually exists. */
-                ReflectionColumnDefinition reflectionColumn = ReflectionColumnDefinition.builder()
-                        .fromAnnotation(column).build();
-                listBuilder.add(reflectionColumn);
-                mapBuilder.put(reflectionColumn.getColumnName().toLowerCase(), reflectionColumn);
-            } else if (column.jsonColumnInfo().isSelected()) {
-                JsonColumnDefinition jsonColumn = JsonColumnDefinition.builder().fromAnnotation(column).build();
-                listBuilder.add(jsonColumn);
-                mapBuilder.put(jsonColumn.getColumnName().toLowerCase(), jsonColumn);
-            } else if (column.manualColumnInfo().isSelected()) {
-                ManualColumnDefinition manualColumn = ManualColumnDefinition.builder().fromAnnotation(column).build();
-                listBuilder.add(manualColumn);
-                mapBuilder.put(manualColumn.getColumnName().toLowerCase(), manualColumn);
-            } else if (column.createdElsewhere()) {
-                PlaceholderColumnDefinition placeholderColumn = PlaceholderColumnDefinition.builder()
-                        .fromAnnotation(column).build();
-                listBuilder.add(placeholderColumn);
-                mapBuilder.put(placeholderColumn.getColumnName().toLowerCase(), placeholderColumn);
-            }
+            ColumnDefinition columnDefinition = makeColumnDefinition(column);
+            listBuilder.add(columnDefinition);
+            mapBuilder.put(columnDefinition.getColumnName().toLowerCase(), columnDefinition);
         }
         ImmutableList<ColumnDefinition> list = listBuilder.build();
         ImmutableMap<String, ColumnDefinition> map = mapBuilder.build();
         if (log.isDebugEnabled()) {
-            log.debug("Caching columnDefinitionList:" + list);
-            log.debug("Caching columnMap:" + map);
+            log.trace("Caching columnDefinitionList:" + list);
+            log.trace("Caching columnMap:" + map);
         }
         columnDefinitionLists.put(annotation, list);
         columnDefinitionMaps.put(annotation, map);
@@ -153,7 +168,37 @@ public class CassandraTableProcessor {
         RingClient client = clientManager.getRingClientForGroup(annotation.multiRingGroup());
         if (client.keyspaceExists(client.getPreferredKeyspaceName())) {
             client.getPreferredKeyspace().dropTableIfExists(annotation.tableName());
+            if (annotation.solrOptions().enabled()) {
+                try {
+                    // TODO: figure out a way to detect if the core has been dropped.
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new AssertException(e);
+                }
+            }
         }
     }
 
+    public static Iterable<Class<?>> getTableClasses() {
+        return ReflectionHelpers.getTypesAnnotatedWith("/", CassandraTable.class);
+    }
+
+    public static Iterable<Class<?>> getSolrTableClasses() {
+        return getTableClasses(new Predicate<Class<?>>() {
+
+            @Override
+            public boolean apply(Class<?> input) {
+                try {
+                    CassandraTable annotation = getAnnotation(input);
+                    return annotation.solrOptions().enabled();
+                } catch (AssertException e) {
+                    return false;
+                }
+            }
+        });
+    }
+
+    public static Iterable<Class<?>> getTableClasses(Predicate<Class<?>> predicate) {
+        return Iterables.filter(getTableClasses(), predicate);
+    }
 }

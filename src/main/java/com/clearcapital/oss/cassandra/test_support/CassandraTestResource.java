@@ -11,12 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.annotation_processors.CassandraTableProcessor;
+import com.clearcapital.oss.cassandra.annotation_processors.SolrCoreModifier;
 import com.clearcapital.oss.cassandra.annotations.CassandraTable;
 import com.clearcapital.oss.cassandra.configuration.MultiRingConfiguration;
 import com.clearcapital.oss.cassandra.exceptions.CassandraException;
 import com.clearcapital.oss.cassandra.multiring.MultiRingClientManager;
 import com.clearcapital.oss.commands.CommandExecutionException;
 import com.clearcapital.oss.executors.ImmediateCommandExecutor;
+import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.exceptions.AssertException;
 import com.clearcapital.oss.json.JsonSerializer;
 import com.datastax.driver.core.TableMetadata;
@@ -57,9 +59,19 @@ public class CassandraTestResource extends ExternalResource {
 
     public void recreateTable(Class<?> tableClass) throws AssertException, CassandraException, ClientProtocolException,
             CommandExecutionException, IOException {
-        while (tableExists(CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup(),
-                CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+        String multiRingGroup = CassandraTableProcessor.getAnnotation(tableClass).multiRingGroup();
+
+        multiRingClientManager.getRingClientForGroup(multiRingGroup).createPreferredKeyspace();
+        if (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
             CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+        }
+        while (tableExists(multiRingGroup, CassandraTableProcessor.getAnnotation(tableClass).tableName())) {
+            try {
+                Thread.sleep(1000);
+                CassandraTableProcessor.dropTableIfExists(multiRingClientManager, tableClass);
+            } catch (InterruptedException e) {
+                AssertHelpers.fail("interrupted while trying to drop table");
+            }
         }
         CassandraTableProcessor.tableBuilder(new ImmediateCommandExecutor(), multiRingClientManager, tableClass)
                 .build();
@@ -86,6 +98,22 @@ public class CassandraTestResource extends ExternalResource {
 
     public TableMetadata getTableMetadata(String group, String table) throws AssertException {
         return multiRingClientManager.getRingClientForGroup(group).getPreferredKeyspace().getTableMetadata(table);
+    }
+
+    public boolean tableExists(Class<?> tableClass) throws AssertException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(tableClass);
+        return tableExists(annotation.multiRingGroup(), annotation.tableName());
+    }
+
+    public void dropTable(Class<?> tableClass) throws AssertException, CassandraException {
+        CassandraTable annotation = CassandraTableProcessor.getAnnotation(tableClass);
+        multiRingClientManager.getRingClientForGroup(annotation.multiRingGroup()).getPreferredKeyspace()
+                .dropTableIfExists(annotation.tableName());
+    }
+
+    public void reloadCoreInPlace(Class<?> tableClass) throws AssertException, CommandExecutionException, CassandraException {
+        ImmediateCommandExecutor executor = new ImmediateCommandExecutor();
+        new SolrCoreModifier(executor, multiRingClientManager, tableClass).reloadInPlace();
     }
 
 }

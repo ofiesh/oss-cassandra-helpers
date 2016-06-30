@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.clearcapital.oss.cassandra.CQLHelpers;
 import com.clearcapital.oss.cassandra.SessionHelper;
-import com.clearcapital.oss.commands.Command;
 import com.clearcapital.oss.commands.CommandExecutionException;
+import com.clearcapital.oss.commands.DebuggableCommand;
 import com.clearcapital.oss.executors.CommandExecutor;
 import com.clearcapital.oss.java.AssertHelpers;
 import com.clearcapital.oss.java.StackHelpers;
@@ -19,7 +19,7 @@ import com.datastax.driver.core.Statement;
 /**
  * CassandraCommand can be used in conjunction with {@link CommandExecutor} to queue writes up for later execution.
  */
-public class CassandraCommand implements Command {
+public class CassandraCommand implements DebuggableCommand {
 
     private static Logger log = LoggerFactory.getLogger(CassandraCommand.class);
 
@@ -28,6 +28,15 @@ public class CassandraCommand implements Command {
     private Statement statement;
 
     private final Collection<Object> debugInfo = new ArrayList<Object>();
+
+    public CassandraCommand() {
+    }
+
+    public CassandraCommand(CassandraCommand that) {
+        this.session = that.session;
+        this.location = that.location;
+        this.statement = that.statement;
+    }
 
     public String getLocation() {
         return location;
@@ -65,9 +74,12 @@ public class CassandraCommand implements Command {
                     "Attempted to create a CassandraBundle without providing a location.");
             AssertHelpers.notNull(result.session,
                     "Attempted to create a CassandraBundle without providing a dseSession.");
-            AssertHelpers.notNull(result.statement,
-                    "Attempted to create a CassandraBundle without providing a Statement.");
-            return result;
+            /*
+             * AssertHelpers.notNull(result.statement,
+             * "Attempted to create a CassandraBundle without providing a Statement.");
+             */
+            CassandraCommand command = new CassandraCommand(result);
+            return command;
         }
 
         /**
@@ -94,7 +106,6 @@ public class CassandraCommand implements Command {
         }
     }
 
-
     protected SessionHelper getSession() {
         return session;
     }
@@ -102,15 +113,17 @@ public class CassandraCommand implements Command {
     @Override
     public void execute() throws CommandExecutionException {
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Executing statement:" + CQLHelpers.getQueryText(statement));
+            if (statement != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Executing statement:" + CQLHelpers.getQueryText(statement));
+                }
+                getSession().execute(statement);
             }
-            getSession().execute(statement);
         } catch (Throwable e) {
             log.error("The following statement caused an exception, built here:" + getLocation() + "\n debugInfo:"
                     + debugInfo + "\n queryText:" + CQLHelpers.getQueryText(statement), e);
-            throw new CommandExecutionException("Could not execute batch statements from bundle, built here:"
-                    + getLocation(), e);
+            throw new CommandExecutionException(
+                    "Could not execute statements from CassandraCommand, built here:" + getLocation(), e);
         }
     }
 }

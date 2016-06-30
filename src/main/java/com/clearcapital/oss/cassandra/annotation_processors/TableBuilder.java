@@ -64,17 +64,10 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
         }
 
         for (AdditionalIndex additionalIndex : additionalIndexes) {
-            if (additionalIndex.indexMapKeys()) {
-                executor.addCommand(CassandraCommand.builder(getSession())
-                        .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
-                                .andKeysOfColumn(additionalIndex.columnName()))
-                        .build());
-            } else {
-                executor.addCommand(CassandraCommand.builder(getSession())
-                        .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
-                                .andKeysOfColumn(additionalIndex.columnName()))
-                        .build());
-            }
+            executor.addCommand(CassandraCommand.builder(getSession())
+                    .setStatement(SchemaBuilder.createIndex(additionalIndex.name()).onTable(tableName)
+                            .andColumn(additionalIndex.columnName()))
+                    .build());
         }
 
         SolrOptions solrOptions = annotation.solrOptions();
@@ -105,6 +98,8 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
 
             SolrOptionsProcessor.coreCreator(executor, manager, tableClass).setMultiRingGroup(multiRingGroup)
                     .setTableName(tableName).create();
+
+            executor.addCommand(new SolrCoreWaiter(manager,tableClass,solrOptions.coreCreationTimeoutMs()).setTableName(tableName));
         }
     }
 
@@ -130,20 +125,20 @@ public class TableBuilder extends TableProcessor<TableBuilder> {
 
                 switch (definition.getColumnOption()) {
                     case PARTITION_KEY:
-                        log.debug("Adding partition key column:" + columnName);
+                        log.trace("Adding partition key column:" + columnName);
                         create.addPartitionKey(columnName, definition.getDataType());
                         break;
                     case CLUSTERING_KEY_ASC:
                     case CLUSTERING_KEY_DESC:
-                        log.debug("Adding clustering column:" + columnName);
+                        log.trace("Adding clustering column:" + columnName);
                         create.addClusteringColumn(columnName, definition.getDataType());
                         break;
                     case STATIC:
-                        log.debug("Adding static column:" + columnName);
+                        log.trace("Adding static column:" + columnName);
                         create.addStaticColumn(columnName, definition.getDataType());
                         break;
                     case NULL:
-                        log.debug("Adding column:" + columnName);
+                        log.trace("Adding column:" + columnName);
                         create.addColumn(columnName, definition.getDataType());
                         break;
                 }

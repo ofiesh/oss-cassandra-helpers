@@ -29,50 +29,50 @@ import com.google.common.collect.ImmutableMap;
 public class MultiRingConfiguration {
 
     @JsonProperty
-	private ImmutableMap<String, RingConfiguration> rings;
+    private ImmutableMap<String, RingConfiguration> rings;
 
     @JsonProperty
-	private String defaultRing;
+    private String defaultRing;
 
     @JsonProperty
-	private ImmutableMap<String, String> groups;
+    private ImmutableMap<String, String> groups;
 
-	MultiRingConfiguration() {
+    MultiRingConfiguration() {
 
-	}
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(this, rings, defaultRing, groups);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(this, rings, defaultRing, groups);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof MultiRingConfiguration) {
-			MultiRingConfiguration that = (MultiRingConfiguration) obj;
-			return Objects.equals(rings, that.rings) && Objects.equals(defaultRing, that.defaultRing)
-					&& Objects.equals(groups, that.groups);
-		}
-		return false;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MultiRingConfiguration) {
+            MultiRingConfiguration that = (MultiRingConfiguration) obj;
+            return Objects.equals(rings, that.rings) && Objects.equals(defaultRing, that.defaultRing)
+                    && Objects.equals(groups, that.groups);
+        }
+        return false;
+    }
 
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this).add("rings", "rings").add("defaultRing", "defaultRing")
-				.add("ringOverrides", groups).toString();
-	}
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("rings", "rings").add("defaultRing", "defaultRing")
+                .add("ringOverrides", groups).toString();
+    }
 
-	public ImmutableMap<String, RingConfiguration> getRings() {
-		return rings;
-	}
+    public ImmutableMap<String, RingConfiguration> getRings() {
+        return rings;
+    }
 
-	public String getDefaultRing() {
-		return defaultRing;
-	}
+    public String getDefaultRing() {
+        return defaultRing;
+    }
 
-	public ImmutableMap<String, String> getGroups() {
-		return groups;
-	}
+    public ImmutableMap<String, String> getGroups() {
+        return groups;
+    }
 
     public static Builder builder() {
         return new Builder();
